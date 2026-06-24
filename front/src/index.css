@@ -464,3 +464,28 @@ h4 { font-size: 1rem;   font-weight: 700; }
   z-index: 10;
 }
 .chat-locked p { font-size: .9rem; color: var(--text-secondary); font-weight: 600; }
+
+/* ── 모바일 유틸 ─────────────────────────────────────────────── */
+.hide-mobile  { display: inline-flex; }
+.show-mobile  { display: none; }
+@media (max-width: 768px) {
+  .hide-mobile  { display: none !important; }
+  .show-mobile  { display: flex !important; }
+  .header-search { display: none; }
+  .site-nav { display: none; }
+  .page-wrap { padding-top: calc(var(--header-h) + 16px); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .top-section { grid-template-columns: 1fr; }
+  .popular-section { grid-template-columns: 1fr; }
+  .news-grid { grid-template-columns: 1fr; }
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
+/* ── 스켈레톤 로딩 ───────────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .5; }
+}
