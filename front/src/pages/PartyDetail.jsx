@@ -1,3 +1,4 @@
+import io from 'socket.io-client'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getParty, joinParty, sendPartyChat } from '../api/services'
@@ -9,6 +10,8 @@ export default function PartyDetail() {
   const { partyId } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+
+  const socket = useRef(null)
 
   const [party,     setParty]     = useState(null)
   const [messages,  setMessages]  = useState([])
@@ -40,14 +43,36 @@ export default function PartyDetail() {
     } catch (e) { alert(e.response?.data?.message ?? '오류가 발생했습니다.') }
   }
 
-  const handleChat = async (e) => {
+  useEffect(() => {
+    socket.current = io('http://localhost:5000') // 서버 주소
+
+    // 채팅방 입장
+    if (user) {
+      socket.current.emit('join', { room_id: partyId, username: user.nickname })
+    }
+
+    // 메시지 수신
+    socket.current.on('receive_message', (msg) => {
+      setMessages((prev) => [...prev, msg])
+    })
+
+    return () => {
+      socket.current.disconnect() // 컴포넌트 언마운트 시 연결 종료
+    }
+  }, [partyId, user])
+
+  // 2. handleChat 함수 수정
+  const handleChat = (e) => {
     e.preventDefault()
     if (!chatInput.trim()) return
-    try {
-      const msg = await sendPartyChat(partyId, chatInput)
-      setMessages((prev) => [...prev, msg])
-      setChatInput('')
-    } catch {}
+
+    // API 호출 대신 소켓으로 전송
+    socket.current.emit('send_message', {
+      room_id: partyId,
+      sender: user, // 서버에서 보낼 때 sender 정보를 포함하도록 구성
+      content: chatInput
+    })
+    setChatInput('')
   }
 
   // 더미 리뷰 (실제 API 연결 전 UI 확인용)
