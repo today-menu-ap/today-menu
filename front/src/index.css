@@ -173,6 +173,35 @@ button, input, textarea, select {
   color: #FFFFFF;
 }
 
+/* ── s ────────────────────────────────────────────────────── */
+.login-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--text-muted);
+  opacity: 0.5;
+}
+
+.login-divider::before {
+  margin-right: 16px;
+}
+
+.login-divider::after {
+  margin-left: 16px;
+}
+
+.login-divider span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
 /* ── BUTTONS ────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -189,11 +218,24 @@ button, input, textarea, select {
 }
 
 .btn-sm { padding: 6px 14px; font-size: .85rem; border-radius: var(--border-radius-sm); }
-.btn-primary { background: var(--color-primary); color: #fff; }
-.btn-primary:hover { background: var(--color-primary-dark); }
-.btn-secondary { background: var(--bg-surface); color: var(--text-primary); border-color: var(--border-color); }
-.btn-secondary:hover { background: var(--border-color); }
+.btn-primary {
+  background: #F46C6F;
+  color: #fff;
+  border-color: #F46C6F;
+}
 
+.btn-primary:hover {
+  background: #e85b5f;
+}
+.btn-secondary {
+  background: #FEB95C;
+  color: #fff;
+  border-color: #FEB95C;
+}
+
+.btn-secondary:hover {
+  background: #f6ac3b;
+}
 /* ── MAIN PAGE LAYOUT CLASSES (핵심 해결 영역) ───────────────────── */
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 .mb-16 { margin-bottom: 16px; }
@@ -307,6 +349,7 @@ button, input, textarea, select {
   position: relative;
   width: 250px;
   font-size: 14px;
+  margin-top: -9px;
 }
 
 /* 캡슐 알약 형태의 반원형 버튼 복구 */
@@ -740,3 +783,4 @@ button, input, textarea, select {
 .search-bar { display: flex; gap: 8px; }
 .search-bar .form-control { border-radius: 24px; }
 .search-bar .btn { border-radius: 24px; }
+

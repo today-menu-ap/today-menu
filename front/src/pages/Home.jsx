@@ -5,6 +5,8 @@ import { getRestaurants, getNearby } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantSearch from '../components/RestaurantSearch'
+import RestaurantImage from "../components/RestaurantImage";
+
 
 const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥟', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 피자: '🍕', 카페: '☕' }
 const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
@@ -160,7 +162,13 @@ export default function Home() {
             </div>
           ) : trending.slice(0, 8).map((r) => (
             <Link to={`/menu/${r.id}`} className="card rest-card" key={r.id}>
-              <div className="card-img">{catIcon(r.category)}</div>
+              <div className="card-img">
+    <RestaurantImage
+        imageUrl={r.image_url}
+        category={r.category}
+        name={r.name}
+    />
+</div>
               <div className="card-body">
                 <span className="badge badge-primary">{r.category || '기타'}</span>
                 <div className="card-title mt-8">{r.name}</div>

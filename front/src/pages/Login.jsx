@@ -204,7 +204,15 @@ export default function Login() {
           </button>
         </div>
 
-        <div className="auth-divider" style={{ margin: '20px 0' }}>이메일로 로그인</div>
+        <div
+  className="login-divider"
+  style={{
+    color: 'var(--text-muted)',
+    fontSize: '.82rem',
+  }}
+>
+  이메일로 로그인
+</div>
 
         {/* 이메일 로그인 */}
         <form onSubmit={handleSubmit}>
