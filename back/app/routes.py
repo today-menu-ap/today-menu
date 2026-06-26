@@ -63,9 +63,11 @@ def serialize_user(u):
         'manner_score': u.manner_score,
         'preferences':  u.preferences,
         'allergies':    u.allergies,
+        'gender':       u.gender or '미설정',   # ← 추가
+        'address':      u.address or '',         # ← 추가
         'role':         u.role.value,
         'created_at':   u.created_at.isoformat() if u.created_at else None,
-        'saved_locations': prefs.get('saved_locations', []),  # [{name, address, lat, lng}]
+        'saved_locations': prefs.get('saved_locations', []),
     }
 
 def serialize_restaurant(r):
@@ -216,6 +218,8 @@ def update_me():
         user.nickname = nickname
 
     user.allergies   = data.get('allergies', user.allergies)
+    user.gender    = data.get('gender',    user.gender)    # ← 추가
+    user.address   = data.get('address',   user.address)   # ← 추가
     prefs = user.preferences or {}
 
     new_locations = data.get('saved_locations', None)
