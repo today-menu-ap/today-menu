@@ -30,9 +30,9 @@ export default function PartyCreate() {
   return (
     <>
       <Link to="/party" className="btn btn-sm btn-secondary" style={{ marginBottom: 16 }}>← 목록으로</Link>
-      <h2 style={{ marginBottom: 24 }}>🍽️ 밥친구 파티 만들기</h2>
+      <h2 style={{ marginBottom: 24, textAlign: 'center' }}>🍽️ 밥친구 파티 만들기</h2>
 
-      <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-xl)', padding: 32, maxWidth: 560 }}>
+      <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-xl)', padding: 32, maxWidth: 560, margin: '0 auto' }}>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">파티 제목 *</label>

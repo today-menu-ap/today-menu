@@ -2,28 +2,30 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getRestaurants } from '../api/services'
 import { useAuth } from '../App'
+import RestaurantImage from "../components/RestaurantImage";
 
-const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 피자:'🍕', 카페:'☕', 술집:'🍺' }
-const CATEGORIES = ['전체','한식','일식','중식','양식','분식','치킨','피자','카페','술집']
+const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥟', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 피자: '🍕', 카페: '☕', 술집: '🍺' }
+const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '피자', '카페', '술집']
+
 
 export default function Menu() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const activeCat = searchParams.get('cat')  ?? '전체'
-  const page      = Number(searchParams.get('page') ?? 1)
-  const q         = searchParams.get('q') ?? ''
+  const activeCat = searchParams.get('cat') ?? '전체'
+  const page = Number(searchParams.get('page') ?? 1)
+  const q = searchParams.get('q') ?? ''
 
-  const [items,       setItems]       = useState([])
-  const [pagination,  setPagination]  = useState({ total: 0, pages: 1, page: 1, has_prev: false, has_next: false })
-  const [loading,     setLoading]     = useState(false)
+  const [items, setItems] = useState([])
+  const [pagination, setPagination] = useState({ total: 0, pages: 1, page: 1, has_prev: false, has_next: false })
+  const [loading, setLoading] = useState(false)
   const [searchInput, setSearchInput] = useState(q)
 
   const fetchData = useCallback(() => {
     setLoading(true)
     getRestaurants({ cat: activeCat, q, page })
       .then((d) => { setItems(d.items ?? []); setPagination(d) })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false))
   }, [activeCat, q, page])
 
@@ -124,8 +126,13 @@ export default function Menu() {
           {items.map((r) => (
             <Link to={`/menu/${r.id}`} key={r.id} className="card rest-card" style={{ textDecoration: 'none', color: 'inherit' }}>
               {/* 썸네일 */}
-              <div className="card-img" style={{ fontSize: '2.5rem' }}>
-                {CAT_ICON[r.category] ?? '🍴'}
+              {/* ── Menu.jsx 썸네일 구역 교체 ── */}
+              <div className="card-img">
+                <RestaurantImage
+                  imageUrl={r.image_url}
+                  category={r.category}
+                  name={r.name}
+                />
               </div>
               <div className="card-body">
                 <span className="badge badge-primary">{r.category || '기타'}</span>
