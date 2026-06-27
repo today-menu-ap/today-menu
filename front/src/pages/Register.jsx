@@ -2,145 +2,147 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { register } from '../api/services'
 
-const PREF_FOODS = ['한식','일식','중식','양식','분식','치킨','피자','채식','해산물','매운맛']
-const REQ_TERMS  = ['만 14세 이상입니다.','쇼핑 이용약관 동의','전자금융거래 이용약관 동의','개인정보 제3자 제공 동의']
-const OPT_TERMS  = ['마케팅 목적 개인정보 수집 및 이용 동의','광고성 정보 수신 동의']
-const SUB_TERMS  = ['이메일 수신 동의','SMS, SNS 수신 동의','앱 푸시 수신 동의']
+const PREFS     = ['한식','일식','중식','양식','분식','치킨','피자','카페','채식','해산물']
+const DISLIKES  = ['오이','고수','파','마늘','쑥갓','가지','당근','콩']
+const REQ_TERMS = ['만 14세 이상입니다.','쇼핑 이용약관 동의','전자금융거래 이용약관 동의','개인정보 제3자 제공 동의']
+const OPT_TERMS = ['마케팅 정보 수신 동의','광고성 정보 수신 동의']
 
 export default function Register() {
   const navigate = useNavigate()
-  const [form,    setForm]    = useState({ email: '', password: '', password2: '', nickname: '', allergies: '', preferences: [] })
+  const [form, setForm] = useState({
+    email: '', password: '', password2: '', nickname: '', allergies: '',
+    preferences: [], dislikes: [],
+  })
   const [terms,   setTerms]   = useState({})
-  const [agreeAll,setAgreeAll]= useState(false)
-  const [pwError, setPwError] = useState('')
+  const [agreeAll, setAgreeAll] = useState(false)
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
-  const togglePref = (food) => setForm((f) => ({
-    ...f, preferences: f.preferences.includes(food) ? f.preferences.filter((x) => x !== food) : [...f.preferences, food]
-  }))
+  const togglePref = (val, key) =>
+    setForm(f => ({ ...f, [key]: f[key].includes(val) ? f[key].filter(v => v !== val) : [...f[key], val] }))
 
   const handleAgreeAll = (checked) => {
     setAgreeAll(checked)
     const all = {}
-    ;[...REQ_TERMS, ...OPT_TERMS, ...SUB_TERMS].forEach((t) => { all[t] = checked })
+    ;[...REQ_TERMS, ...OPT_TERMS].forEach(t => { all[t] = checked })
     setTerms(all)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (form.password !== form.password2) { setPwError('비밀번호가 일치하지 않습니다.'); return }
-    if (!REQ_TERMS.every((t) => terms[t])) { setError('필수 약관에 동의해주세요.'); return }
-    setError(''); setLoading(true)
+    setError('')
+    if (!REQ_TERMS.every(t => terms[t])) return setError('필수 약관에 동의해주세요.')
+    if (form.password !== form.password2) return setError('비밀번호가 일치하지 않습니다.')
+    setLoading(true)
     try {
       await register(form)
       navigate('/login')
     } catch (err) {
       setError(err.response?.data?.message ?? '회원가입에 실패했습니다.')
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="register-wrap">
-      <div className="register-card">
-        <div className="reg-logo">
-          <div className="site-logo">🍽️ <span>오늘의 메뉴</span></div>
+    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center p-4 py-12">
+      <div className="bg-white border border-gray-200 rounded-2xl p-8 w-full max-w-lg shadow-lg">
+        <div className="text-center mb-6">
+          <span className="text-4xl">🍽️</span>
+          <h1 className="text-xl font-black mt-2">오늘의 메뉴</h1>
+          <p className="text-sm text-gray-500 mt-1">회원정보를 입력해주세요</p>
         </div>
-        <p className="reg-title">회원정보를 입력해주세요</p>
 
-        <form id="registerForm" onSubmit={handleSubmit}>
-          {/* 이메일 */}
-          <div className="form-group form-icon-wrap">
-            <span className="form-icon">✉️</span>
-            <input type="email" className="form-control" placeholder="아이디(이메일)" required
-              value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 기본 정보 */}
+          {[
+            { label:'이메일 *',     type:'email',    key:'email',     ph:'이메일 입력' },
+            { label:'닉네임 *',     type:'text',     key:'nickname',  ph:'닉네임 입력' },
+            { label:'비밀번호 *',   type:'password', key:'password',  ph:'8자 이상' },
+            { label:'비밀번호 확인 *', type:'password', key:'password2', ph:'비밀번호 재입력' },
+          ].map(({ label, type, key, ph }) => (
+            <div key={key}>
+              <label className="block text-sm font-semibold text-gray-600 mb-1">{label}</label>
+              <input type={type} required className="input" placeholder={ph}
+                value={form[key]}
+                onChange={e => setForm({ ...form, [key]: e.target.value })} />
+            </div>
+          ))}
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">알러지/제외 재료</label>
+            <input type="text" className="input" placeholder="예: 오이, 갑각류, 땅콩"
+              value={form.allergies}
+              onChange={e => setForm({ ...form, allergies: e.target.value })} />
           </div>
-          {/* 비밀번호 */}
-          <div className="form-group form-icon-wrap">
-            <span className="form-icon">🔒</span>
-            <input type="password" className="form-control" placeholder="비밀번호 (8자 이상)" required minLength={8}
-              value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-          </div>
-          {/* 비밀번호 확인 */}
-          <div className="form-group form-icon-wrap">
-            <span className="form-icon">🔒</span>
-            <input type="password" className="form-control" placeholder="비밀번호 확인"
-              value={form.password2}
-              onChange={(e) => { setForm({ ...form, password2: e.target.value }); setPwError('') }} />
-            {pwError && <div className="form-error">{pwError}</div>}
-          </div>
-          {/* 닉네임 */}
-          <div className="form-group form-icon-wrap">
-            <span className="form-icon">👤</span>
-            <input type="text" className="form-control" placeholder="이름 (닉네임)" required
-              value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} />
-          </div>
-          {/* 알러지 */}
-          <div className="form-group form-icon-wrap">
-            <span className="form-icon">🚫</span>
-            <input type="text" className="form-control" placeholder="알러지 정보 (예: 오이, 갑각류, 땅콩)"
-              value={form.allergies} onChange={(e) => setForm({ ...form, allergies: e.target.value })} />
-          </div>
-          {/* 선호 메뉴 */}
-          <div className="form-group">
-            <div className="form-label">좋아하는 음식 <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(선택)</span></div>
-            <div className="reg-prefs">
-              {PREF_FOODS.map((food) => (
-                <div className="reg-pref-chip" key={food}>
-                  <input type="checkbox" id={`pref_${food}`} checked={form.preferences.includes(food)}
-                    onChange={() => togglePref(food)} />
-                  <label htmlFor={`pref_${food}`}>{food}</label>
-                </div>
+
+          {/* 선호 음식 칩 */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-2">좋아하는 음식</label>
+            <div className="flex flex-wrap gap-2">
+              {PREFS.map(p => (
+                <button type="button" key={p}
+                  onClick={() => togglePref(p, 'preferences')}
+                  className={`px-3 py-1 rounded-full border text-sm font-semibold transition-colors
+                    ${form.preferences.includes(p) ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}>
+                  {p}
+                </button>
               ))}
             </div>
           </div>
 
-          <hr className="divider" />
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-2">싫어하는 음식</label>
+            <div className="flex flex-wrap gap-2">
+              {DISLIKES.map(d => (
+                <button type="button" key={d}
+                  onClick={() => togglePref(d, 'dislikes')}
+                  className={`px-3 py-1 rounded-full border text-sm font-semibold transition-colors
+                    ${form.dislikes.includes(d) ? 'bg-red-500 text-white border-red-500' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <hr className="border-gray-100" />
 
           {/* 약관 */}
-          <div className="reg-terms-box">
-            <div className="reg-terms-all">
-              <input type="checkbox" id="agreeAll" checked={agreeAll} onChange={(e) => handleAgreeAll(e.target.checked)} />
-              <label htmlFor="agreeAll">모두 확인하였으며 동의합니다.</label>
-            </div>
-            <p style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.6 }}>
-              전체 동의는 필수 및 선택 정보에 대한 동의도 포함되어 있으며, 개별적으로 동의를 선택할 수도 있습니다.
-            </p>
-            {[...REQ_TERMS.map((t) => [t, true]), ...OPT_TERMS.map((t) => [t, false])].map(([label, req]) => (
-              <div className="reg-terms-item" key={label}>
-                <label>
-                  <input type="checkbox" checked={!!terms[label]} onChange={(e) => setTerms({ ...terms, [label]: e.target.checked })} />
-                  {req ? <span className="required">[필수]</span> : <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>[선택]</span>}
-                  {label}
+          <div className="bg-gray-50 rounded-xl p-4">
+            <label className="flex items-center gap-2 font-bold text-sm mb-3 cursor-pointer">
+              <input type="checkbox" checked={agreeAll} onChange={e => handleAgreeAll(e.target.checked)}
+                className="w-4 h-4 accent-red-500" />
+              모두 확인하였으며 동의합니다.
+            </label>
+            <div className="space-y-1.5 border-t border-gray-200 pt-3">
+              {REQ_TERMS.map(t => (
+                <label key={t} className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input type="checkbox" checked={!!terms[t]} onChange={e => setTerms({ ...terms, [t]: e.target.checked })}
+                    className="w-3.5 h-3.5 accent-red-500" />
+                  <span className="text-red-500 font-bold">[필수]</span> {t}
                 </label>
-                <span className="reg-terms-arrow">›</span>
-              </div>
-            ))}
-            <div style={{ marginLeft: 24, padding: '8px 0', borderTop: '1px solid var(--border-color)' }}>
-              {SUB_TERMS.map((t) => (
-                <div className="reg-terms-item" key={t}>
-                  <label>
-                    <input type="checkbox" checked={!!terms[t]} onChange={(e) => setTerms({ ...terms, [t]: e.target.checked })} />
-                    <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>[선택]</span> {t}
-                  </label>
-                </div>
+              ))}
+              {OPT_TERMS.map(t => (
+                <label key={t} className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
+                  <input type="checkbox" checked={!!terms[t]} onChange={e => setTerms({ ...terms, [t]: e.target.checked })}
+                    className="w-3.5 h-3.5 accent-red-500" />
+                  <span className="text-gray-400">[선택]</span> {t}
+                </label>
               ))}
             </div>
           </div>
 
-          {error && <div className="alert alert-danger">{error}</div>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          <div className="submit-btn-wrap">
-            <button type="submit" disabled={loading} className="btn btn-primary btn-lg">
-              {loading ? '가입 중...' : '동의하기'}
-            </button>
-            <div className="size-note">1400px</div>
-          </div>
+          <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
+            {loading ? '가입 중...' : '동의하고 가입하기'}
+          </button>
         </form>
 
-        <div className="auth-footer">
-          이미 계정이 있으신가요? <Link to="/login">로그인</Link>
-        </div>
+        <p className="text-center text-sm text-gray-500 mt-4">
+          이미 계정이 있으신가요?{' '}
+          <Link to="/login" className="text-blue-500 font-semibold hover:underline">로그인</Link>
+        </p>
       </div>
     </div>
   )
