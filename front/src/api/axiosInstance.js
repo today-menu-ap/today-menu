@@ -1,6 +1,15 @@
+/**
+ * axiosInstance.js
+ * ─────────────────────────────────────────────────────────────────────────────
+ * 재사용 가능한 Axios 인스턴스
+ * - 요청 인터셉터 : localStorage의 accessToken을 Authorization 헤더에 자동 주입
+ * - 응답 인터셉터 : 401 토큰 만료 시 refreshToken으로 재발급 → 원래 요청 재시도
+ *                  재발급도 실패하면 로그아웃 처리
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 import axios from 'axios'
 
-// ── 인스턴스 ──────────────────────────────────────────────────────────────────
+// ── 1. 인스턴스 생성 ──────────────────────────────────────────────────────────
 const api = axios.create({
   baseURL:         import.meta.env.VITE_API_URL ?? '',
   timeout:         10_000,
@@ -8,21 +17,21 @@ const api = axios.create({
   withCredentials: true,
 })
 
-// ── 토큰 저장소 ───────────────────────────────────────────────────────────────
+// ── 2. 토큰 저장소 ───────────────────────────────────────────────────────────
 export const TokenStore = {
-  getAccess  : ()      => localStorage.getItem('accessToken'),
-  getRefresh : ()      => localStorage.getItem('refreshToken'),
-  setTokens  : (a, r)  => {
+  getAccess:  ()      => localStorage.getItem('accessToken'),
+  getRefresh: ()      => localStorage.getItem('refreshToken'),
+  setTokens:  (a, r)  => {
     localStorage.setItem('accessToken', a)
     if (r) localStorage.setItem('refreshToken', r)
   },
-  clear      : ()      => {
+  clear: () => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
   },
 }
 
-// ── 요청 인터셉터 : accessToken 자동 첨부 ────────────────────────────────────
+// ── 3. 요청 인터셉터 : accessToken 자동 첨부 ─────────────────────────────────
 api.interceptors.request.use(
   (config) => {
     const token = TokenStore.getAccess()
@@ -32,13 +41,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
-// ── 응답 인터셉터 : 401 → refresh → 재시도 ───────────────────────────────────
+// ── 4. 응답 인터셉터 : 401 → refresh → 재시도 ────────────────────────────────
 let isRefreshing = false
 let failedQueue  = []
 
 function processQueue(error, token = null) {
   failedQueue.forEach(({ resolve, reject }) =>
-    error ? reject(error) : resolve(token)
+    error ? reject(error) : resolve(token),
   )
   failedQueue = []
 }
@@ -58,11 +67,11 @@ api.interceptors.response.use(
       })
     }
 
-    orig._retry   = true
-    isRefreshing  = true
+    orig._retry  = true
+    isRefreshing = true
 
     try {
-      const { data } = await axios.post('/auth/refresh', {}, {
+      const { data } = await axios.post('/api/auth/refresh', {}, {
         headers: { Authorization: `Bearer ${TokenStore.getRefresh()}` },
       })
       const newToken = data.access_token
