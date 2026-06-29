@@ -20,6 +20,8 @@ import Game          from './pages/Game'
 import NaverCallback from './pages/NaverCallback'
 import NotFound from './pages/NotFound' 
 import ScrollToTop from './components/ScrollToTop'
+import Company from './pages/Company';
+import Terms from './pages/Terms'
 
 export const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
@@ -92,6 +94,8 @@ export default function App() {
                 <Route path="/mypage/edit"             element={<PrivateRoute><MyPageEdit /></PrivateRoute>} />
                 <Route path="/game"                    element={<Game />} />
                 <Route path="/auth/naver/callback"     element={<NaverCallback />} />
+                <Route path="/company" element={<Company />} />
+                <Route path="/Terms" element={<Terms />} />
                 {/* * NotFound는 항상 Route의 맨 마지막줄에 있어야함  */}
                 <Route path="*"                        element={<NotFound />} /> 
 
