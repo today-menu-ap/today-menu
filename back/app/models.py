@@ -60,7 +60,16 @@ class Party(db.Model):
 
     members  = db.relationship('PartyMember',   backref='party', cascade='all, delete-orphan')
     messages = db.relationship('ChatMessage',   backref='party', cascade='all, delete-orphan')
+    kicked_users = db.relationship('User', secondary=party_kicked_users, backref='kicked_from_parties')
+    reports = db.relationship('Report', backref='party', cascade='all, delete-orphan')
 
+    def refresh_status(self):
+        now = datetime.utcnow()
+        if self.status != StatusEnum.COMPLETED and self.meeting_time < now:
+            self.status = StatusEnum.COMPLETED
+        elif self.status == StatusEnum.RECRUITING and len(self.members) >= self.max_people:
+            self.status = StatusEnum.CLOSED
+        db.session.commit()
 
 class PartyMember(db.Model):
     __tablename__ = 'party_members'
@@ -104,3 +113,20 @@ class RecommendationLog(db.Model):
     input_context             = db.Column(db.JSON)
     recommended_restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
     is_liked                  = db.Column(db.Boolean, default=False)
+
+class Report(db.Model):
+    __tablename__ = 'reports'
+    __table_args__ = (
+        db.UniqueConstraint('party_id', 'reporter_id', 'target_id', name='_one_report_per_user_per_party'),
+    )
+
+    report_id  = db.Column(db.Integer, primary_key=True)
+    party_id   = db.Column(db.Integer, db.ForeignKey('parties.party_id'), nullable=False)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    target_id  = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    reason     = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_processed = db.Column(db.Boolean, default=False) # 관리자 처리 여부
+
+    reporter = db.relationship('User', foreign_keys=[reporter_id])
+    target = db.relationship('User', foreign_keys=[target_id])

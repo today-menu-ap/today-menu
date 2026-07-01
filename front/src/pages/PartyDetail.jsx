@@ -24,10 +24,20 @@ export default function PartyDetail() {
   const [voteRemaining, setVoteRemaining] = useState(2)
   const [votedToday,    setVotedToday]    = useState([])
   const [voteMsg,       setVoteMsg]       = useState('')
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [targetReportId, setTargetReportId] = useState(null);
+  const [reportReason, setReportReason] = useState('');
 
   const isRecruiting = party ? party.status === 'RECRUITING' : false;
   const isMember = party ? party.is_member : false;
   const pct = party ? Math.min(Math.round((party.member_count / party.max_people) * 100), 100) : 0;
+  const isHost = user && party ? party.host?.user_id === user.user_id : false;
+  const hasMembers = party ? party.members.length > 1 : false;
+
+  const openReportModal = (userId) => {
+  setTargetReportId(userId);
+  setIsReportModalOpen(true);
+};
 
   // ── 파티 정보 로드 ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -176,6 +186,67 @@ export default function PartyDetail() {
   }
 
 
+const handleReport = async (targetId, reason) => {
+  if (!reason || reason.trim() === "") {
+    alert("신고 사유를 입력해주세요.");
+    return;
+  }
+
+  try {
+    const response = await api.post(`/api/party/${partyId}/report`, { 
+      target_id: targetId, 
+      reason: reason 
+    });
+    
+    if (response.data.kicked) {
+      alert("해당 사용자가 신고 3회 누적으로 파티에서 강제 퇴장되었습니다.");
+    } else {
+      alert("신고가 접수되었습니다.");
+    }
+    
+    setIsReportModalOpen(false); 
+    setReportReason('');
+    
+    const d = await getParty(partyId);
+    setParty(d);
+    
+  } catch (e) {
+    alert(e.response?.data?.message || "신고 처리에 실패했습니다.");
+  }
+};
+
+
+const handleFinishParty = async () => {
+  if (!window.confirm("파티를 종료하시겠습니까? 종료 후에는 멤버들의 매너 점수를 평가할 수 있습니다.")) return;
+  try {
+    await closeParty(partyId);
+    alert("파티가 종료되었습니다.");
+    const d = await getParty(partyId);
+    setParty(d);
+  } catch (e) {
+    alert("파티 종료 중 오류가 발생했습니다.");
+  }
+};
+
+const handleDeleteParty = async () => {
+  if (hasMembers) {
+    alert("참여 중인 파티원이 있어 삭제할 수 없습니다.");
+    return;
+  }
+  if (!window.confirm("정말로 파티를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
+  
+  try {
+    await api.delete(`/api/party/${partyId}`);
+    alert("파티가 삭제되었습니다.");
+    navigate('/party');
+  } catch (e) {
+    alert(e.response?.data?.message || "삭제 실패");
+  }
+};
+
+const handleJoinParty = async () => {
+  await handleJoin();
+};
 
   const dummyReviews = [
     { nick: '김철수', score: 5, text: '분위기 좋고 음식도 맛있었어요! 다음에 또 참여하고 싶습니다.' },
@@ -360,47 +431,58 @@ export default function PartyDetail() {
               </span>
             </div>
 
-            {/* 호스트 전용: 파티 취소 */}
-            {party.is_host && party.status !== 'COMPLETED' && (
-              <button
-                onClick={handleCancelParty}
-                style={{
-                  width: '100%', marginBottom: 8, padding: '10px 0',
-                  background: 'transparent', color: 'var(--color-danger)',
-                  border: '1.5px solid var(--color-danger)', borderRadius: 8,
-                  fontSize: '.88rem', fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                ❌ 파티 취소하기
-              </button>
+
+            {/* 1. 호스트 관리 영역 */}
+            {isHost && (
+              <div className="flex flex-col gap-2 mt-4 pt-3 border-t">
+                <h4 className="text-sm font-bold mb-1">호스트 관리</h4>
+                <button 
+                  className={`btn btn-block ${isRecruiting ? 'btn-warning' : 'btn-success'}`}
+                  onClick={() => handleStatusChange(isRecruiting ? 'CLOSED' : 'RECRUITING')}
+                >
+                  {isRecruiting ? '🚫 모집 마감하기' : '✅ 모집 재개하기'}
+                </button>
+                
+                {party.status === 'RECRUITING' && (
+                  <button className="btn btn-outline-warning btn-block" onClick={handleFinishParty}>
+                    🏁 파티 강제 종료
+                  </button>
+                )}
+                
+                <button 
+                  onClick={handleDeleteParty}
+                  disabled={hasMembers}
+                  className={`btn btn-block ${hasMembers ? 'btn-muted' : 'btn-danger'}`}
+                >
+                  {hasMembers ? "참여자 존재 (삭제 불가)" : "🗑️ 파티 삭제"}
+                </button>
+              </div>
+
             )}
 
-            {/* 1. 호스트 전용: 모집 중일 때 마감 버튼 */}
-            {party.is_host && isRecruiting && (
-              <button className="btn btn-warning btn-block" onClick={handleStatusChange.bind(null, 'CLOSED')} style={{ marginBottom: 10 }}>
-                🚫 모집 마감하기
-              </button>
+            {/* 2. 일반 사용자/참여자 액션 영역 */}
+            {!isHost && (
+              <div className="mt-4">
+                {!user ? (
+                  <Link to="/login" className="btn btn-primary btn-block">로그인 후 참여</Link>
+                ) : isMember ? (
+                  <div className="flex flex-col gap-2">
+                    <button className="btn btn-secondary btn-block" disabled>✅ 참여 중</button>
+                    {!isRecruiting && (
+                      <button className="btn btn-info btn-block" onClick={() => setActiveTab('chat')}>
+                        💬 채팅방 입장
+                      </button>
+                    )}
+                  </div>
+                ) : isRecruiting ? (
+                  <button className="btn btn-primary btn-block btn-lg" onClick={handleJoin}>
+                    🍽️ 파티 참여하기
+                  </button>
+                ) : (
+                  <button className="btn btn-muted btn-block" disabled>모집 마감</button>
+                )}
+              </div>
             )}
-
-            {/* 2. 참여자/호스트: 마감된 경우 채팅방 입장 */}
-            {!isRecruiting && isMember && (
-              <button className="btn btn-secondary btn-block" onClick={() => setActiveTab('chat')} style={{ marginBottom: 10 }}>
-                💬 채팅방 입장하기
-              </button>
-            )}
-
-            {/* 3. 일반 사용자/참여 대기: 참여하기 버튼 */}
-            {!isMember && isRecruiting && user && (
-              <button className="btn btn-primary btn-block btn-lg" onClick={handleJoin}>
-                🍽️ 파티 참여하기
-              </button>
-            )}
-
-            {/* 4. 이미 참여 중일 때 */}
-            {isMember && isRecruiting && (
-              <button className="btn btn-secondary btn-block" disabled>✅ 이미 참여 중</button>
-            )}
-
             {/* 5. 비로그인 시 */}
             {!user && <Link to="/login" className="btn btn-primary btn-block">로그인 후 참여</Link>}
 
@@ -461,15 +543,13 @@ export default function PartyDetail() {
                 </button>
               )}
 
-              {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
-              {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
-                <button
-                  onClick={handleCancelParty}
-                  style={{ marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                    color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
-                    borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700 }}
+              {user && m.user?.user_id !== user.user_id && isMember && (
+                <button 
+                  onClick={() => openReportModal(m.user.user_id)} 
+                  className="text-xs text-red-500 border border-red-500 rounded px-2"
                 >
-                  파티중단
+                  신고
+
                 </button>
               )}
               {user && m.user?.user_id !== user.user_id && (
@@ -506,6 +586,31 @@ export default function PartyDetail() {
           </div>
         </div>
       </div>
+    {isReportModalOpen && (
+      <div 
+        className="fixed inset-0 flex items-center justify-center z-50"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }} 
+      >
+        <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+          <h3 className="font-bold mb-4">사용자 신고</h3>
+          <textarea 
+            className="form-control w-full mb-4" 
+            placeholder="신고 사유를 입력하세요"
+            value={reportReason} // 상태값 연결
+            onChange={(e) => setReportReason(e.target.value)}
+          />
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setIsReportModalOpen(false)} className="btn btn-secondary">취소</button>
+            <button 
+              onClick={() => handleReport(targetReportId, reportReason)} 
+              className="btn btn-danger"
+            >
+              신고하기
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   )
 }
