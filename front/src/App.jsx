@@ -22,6 +22,8 @@ import NotFound from './pages/NotFound'
 import ScrollToTop from './components/ScrollToTop'
 import Company from './pages/Company';
 import Terms from './pages/Terms'
+import Terms2 from './pages/Terms2'
+
 import Support from './pages/Support'
 
 export const AuthContext = createContext(null)
@@ -97,6 +99,7 @@ export default function App() {
                 <Route path="/auth/naver/callback"     element={<NaverCallback />} />
                 <Route path="/company"                 element={<Company />} />
                 <Route path="/Terms"                   element={<Terms />} />
+                <Route path="/Terms2"                  element={<Terms2 />} />
                 <Route path="/support"                 element={<Support />} />
                 {/* * NotFound는 항상 Route의 맨 마지막줄에 있어야함  */}
                 <Route path="*"                        element={<NotFound />} /> 

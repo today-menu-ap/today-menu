@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { privacyContent } from "../data/privacyContent";
+import { termsContent } from "../data/termsContent";
 
 export default function Terms() {
   
@@ -28,13 +28,13 @@ export default function Terms() {
         {/* 본문 내부 서브 타이틀 */}
         <div className="text-center mb-28">
           <h2 className="text-2xl font-black text-black tracking-tight">
-            개인정보 처리방침
+            이용 약관
           </h2>
         </div>
 
         {/* 3. 약관 텍스트 내용: 정중앙 정렬 기둥 (privacyContent 데이터만 루프) */}
         <div className="w-full space-y-24 text-center">
-          {privacyContent.map((item, index) => (
+          {termsContent.map((item, index) => (
             <section key={index} className="w-full text-center">
               
               {/* 조항 제목 */}
