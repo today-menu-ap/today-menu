@@ -3,8 +3,8 @@ from datetime import datetime
 import enum
 
 party_kicked_users = db.Table('party_kicked_users',
-    db.Column('party_id', db.Integer, db.ForeignKey('parties.party_id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
+    db.Column('party_id', db.Integer, db.ForeignKey('parties.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
 )
 
 class RoleEnum(enum.Enum):
@@ -19,6 +19,7 @@ class StatusEnum(enum.Enum):
 
 class User(db.Model):
     __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
 
     user_id      = db.Column(db.Integer, primary_key=True)
     email        = db.Column(db.String(100), unique=True, nullable=False)
@@ -54,6 +55,7 @@ class Restaurant(db.Model):
 
 class Party(db.Model):
     __tablename__ = 'parties'
+    id = db.Column(db.Integer, primary_key=True)
 
     party_id      = db.Column(db.Integer, primary_key=True)
     restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)

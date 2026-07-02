@@ -524,6 +524,7 @@ def join_party(party_id):
     if not user:
         return jsonify({'message': '사용자를 찾을 수 없습니다.'}), 404
 
+
     if party.status != StatusEnum.RECRUITING:
         return jsonify({'message': '모집이 마감된 파티입니다.'}), 400
     if len(party.members) >= party.max_people:
@@ -535,7 +536,7 @@ def join_party(party_id):
         return jsonify({'message': '강퇴당한 파티에는 다시 참여할 수 없습니다.'}), 403
 
     db.session.add(PartyMember(party_id=party_id, user_id=user_id))
-    
+
     user.manner_score = min(50.0, round(user.manner_score + 0.5, 1))
     db.session.commit()
     
@@ -609,6 +610,7 @@ def kick_member(party_id, target_user_id):
     
     db.session.commit()
     return jsonify({'message': '강퇴되었으며, 해당 파티에 재참여할 수 없습니다.'}), 200
+
 
 # 파티 모임 종료 (Host 전용)
 @party_bp.route('/<int:party_id>/finish', methods=['PATCH'])

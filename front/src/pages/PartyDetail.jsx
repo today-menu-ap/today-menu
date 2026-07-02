@@ -218,6 +218,7 @@ const handleCancelParty = async () => {
     }
   }
 
+
 const handleFinishParty = async () => {
   if (!window.confirm("파티를 종료하시겠습니까? 종료 후에는 멤버들의 매너 점수를 평가할 수 있습니다.")) return;
   try {
@@ -556,8 +557,10 @@ const handleJoinParty = async () => {
                     color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
                     borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700 }}>
                   신고
+
                 </button>
               )}
+
 
               {/* 일반 참여자 본인 탈퇴 버튼 */}
               {user && !party.is_host && m.user?.user_id === user.user_id && (
