@@ -11,9 +11,9 @@ print(f"[CONFIG] DATABASE_URL = {_db_url[:50] if _db_url else 'NOT SET'}")
 if _db_url.startswith('postgres://'):
     _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
 
-# pg8000 드라이버 명시
-if _db_url.startswith('postgresql://') and 'pg8000' not in _db_url:
-    _db_url = _db_url.replace('postgresql://', 'postgresql+pg8000://', 1)
+# psycopg3 드라이버 사용
+if _db_url.startswith('postgresql://') and '+' not in _db_url:
+    _db_url = _db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
 
 print(f"[CONFIG] Final URI = {_db_url[:50]}")
 
