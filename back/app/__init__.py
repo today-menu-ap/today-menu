@@ -35,6 +35,10 @@ def create_app():
     app.config.from_object('config.Config')
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
 
+    # DB URI 확인
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    print(f"[APP] Using DB: {db_uri[:60]}")
+
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
@@ -57,8 +61,15 @@ def create_app():
     app.register_blueprint(mypage_bp)
     app.register_blueprint(api_bp)
 
-    # ── 앱 시작 시 테이블 자동 생성 ──────────────────────────────
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            print("[APP] DB tables created successfully")
+        except Exception as e:
+            print(f"[APP] DB ERROR: {e}")
+            # SQLite면 종료
+            if 'sqlite' in db_uri:
+                print("[APP] FATAL: Using SQLite instead of PostgreSQL!")
+                sys.exit(1)
 
     return app
