@@ -140,20 +140,53 @@ export default function PartyDetail() {
     try { await api.delete(`/api/party/${partyId}/leave`); alert('파티에서 퇴장했습니다.'); navigate('/party') }
     catch (e) { alert(e.response?.data?.message || '퇴장 오류') }
   }
-  const handleReport = async (targetId) => {
-    const reason = window.prompt('신고 사유를 입력해주세요:')
-    if (!reason?.trim()) return
-    try { await api.post(`/api/party/${partyId}/report`, { target_id: targetId, reason }); alert('신고 접수됐습니다.') }
-    catch (e) { alert(e.response?.data?.message || '신고 실패') }
+
+  const handleReport = async (targetId, reason) => {
+  if (!reason?.trim()) return alert("신고 사유를 입력해주세요.");
+
+  try {
+    const response = await api.post(`/api/party/${partyId}/report`, { 
+      target_id: targetId, 
+      reason: reason 
+    });
+
+    if (response.data.kicked) {
+      alert("신고가 3회 누적되어 해당 사용자가 강제 퇴장되었습니다.");
+    } else {
+      alert("신고가 접수되었습니다.");
+    }
+    
+    setIsReportModalOpen(false); 
+    setReportReason('');
+
+    const updatedParty = await getParty(partyId);
+    setParty(updatedParty);
+    
+  } catch (e) {
+    alert(e.response?.data?.message || "신고 처리에 실패했습니다.");
+    setIsReportModalOpen(false);
   }
-  const handleCancelParty = async () => {
-    if (!window.confirm('파티를 취소하시겠습니까? 취소 후에는 복구할 수 없습니다.')) return
-    try {
-      await api.patch(`/api/party/${partyId}/finish`)
-      alert('파티가 취소되었습니다.')
-      navigate('/party')
-    } catch (e) { alert(e.response?.data?.message || '파티 취소 실패') }
+};
+
+const handleCancelParty = async () => {
+  if (party.members && party.members.length > 1) {
+    alert('이미 다른 파티원이 참여 중입니다. 먼저 파티원을 내보내거나 강퇴한 후 취소할 수 있습니다.');
+    return;
   }
+
+  if (!window.confirm('파티를 취소하시겠습니까? 취소 후에는 복구할 수 없습니다.')) return;
+
+  try {
+    const response = await api.patch(`/api/party/${partyId}/cancel`);
+    
+    alert(response.data.message || '파티가 취소되었습니다.');
+    navigate('/party');
+    
+  } catch (e) {
+    const errMsg = e.response?.data?.message || '파티 취소 중 오류가 발생했습니다.';
+    alert(errMsg);
+  }
+};
 
   const handleStatusChange = async (newStatus) => {
     if (!window.confirm(newStatus === 'CLOSED' ? '모집을 마감하시겠습니까?' : '모집을 재개하시겠습니까?')) return
@@ -184,47 +217,6 @@ export default function PartyDetail() {
       alert(e.response?.data?.message || '마감 처리 중 오류가 발생했습니다.')
     }
   }
-
-
-const handleLeaveParty = async () => {
-  if (!window.confirm("정말로 파티에서 퇴장하시겠습니까?")) return;
-  try {
-    await api.delete(`/api/party/${partyId}/leave`);
-    alert("파티에서 퇴장했습니다.");
-    navigate('/party'); 
-  } catch (e) {
-    alert(e.response?.data?.message || "퇴장 처리 중 오류가 발생했습니다.");
-  }
-};
-
-const handleReport = async (targetId, reason) => {
-  if (!reason || reason.trim() === "") {
-    alert("신고 사유를 입력해주세요.");
-    return;
-  }
-
-  try {
-    const response = await api.post(`/api/party/${partyId}/report`, { 
-      target_id: targetId, 
-      reason: reason 
-    });
-    
-    if (response.data.kicked) {
-      alert("해당 사용자가 신고 3회 누적으로 파티에서 강제 퇴장되었습니다.");
-    } else {
-      alert("신고가 접수되었습니다.");
-    }
-    
-    setIsReportModalOpen(false); 
-    setReportReason('');
-    
-    const d = await getParty(partyId);
-    setParty(d);
-    
-  } catch (e) {
-    alert(e.response?.data?.message || "신고 처리에 실패했습니다.");
-  }
-};
 
 const handleFinishParty = async () => {
   if (!window.confirm("파티를 종료하시겠습니까? 종료 후에는 멤버들의 매너 점수를 평가할 수 있습니다.")) return;
@@ -555,11 +547,14 @@ const handleJoinParty = async () => {
                   강퇴
                 </button>
               )}
+
               {user && m.user?.user_id !== user.user_id && isMember && (
                 <button 
                   onClick={() => openReportModal(m.user.user_id)} 
                   className="text-xs text-red-500 border border-red-500 rounded px-2"
-                >
+                  style={{ marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
+                    color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
+                    borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700 }}>
                   신고
                 </button>
               )}
@@ -580,14 +575,31 @@ const handleJoinParty = async () => {
               {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
               {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
                 <button
-                  onClick={handleCancelParty}
-                  style={{ marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                    color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
-                    borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700 }}
+                  onClick={() => {
+                    // 파티원(본인 포함)이 1명 초과일 때(즉, 다른 사람이 있을 때) 경고
+                    if (party.members.length > 1) {
+                      alert('다른 파티원이 참여 중이므로 파티를 중단할 수 없습니다. 강퇴하거나 멤버가 모두 나간 뒤 시도해주세요.');
+                      return;
+                    }
+                    handleCancelParty();
+                  }}
+                  style={{ 
+                    marginRight: 4, 
+                    fontSize: '0.72rem', 
+                    padding: '3px 8px',
+                    // 파티원이 있을 때는 회색(비활성 느낌), 없으면 빨간색(활성)
+                    color: party.members.length > 1 ? '#999' : 'var(--color-danger)', 
+                    border: `1px solid ${party.members.length > 1 ? '#ccc' : 'var(--color-danger)'}`,
+                    borderRadius: 6, 
+                    cursor: party.members.length > 1 ? 'not-allowed' : 'pointer', 
+                    background: 'transparent', 
+                    fontWeight: 700 
+                  }}
                 >
-                  파티중단
+                  {party.members.length > 1 ? '중단 불가' : '파티중단'}
                 </button>
               )}
+
               {user && m.user?.user_id !== user.user_id && (
                 <div style={{display:'flex',gap:3,flexShrink:0}}>
                   <button onClick={() => handleVote(m.user.user_id, true)}

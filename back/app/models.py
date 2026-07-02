@@ -2,6 +2,11 @@ from . import db
 from datetime import datetime
 import enum
 
+party_kicked_users = db.Table('party_kicked_users',
+    db.Column('party_id', db.Integer, db.ForeignKey('parties.party_id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
+)
+
 class RoleEnum(enum.Enum):
     USER  = "USER"
     ADMIN = "ADMIN"
@@ -10,6 +15,7 @@ class StatusEnum(enum.Enum):
     RECRUITING = "RECRUITING"
     CLOSED     = "CLOSED"
     COMPLETED  = "COMPLETED"
+    CANCELLED = 'CANCELLED'
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -124,3 +130,26 @@ class Report(db.Model):
 
     reporter = db.relationship('User', foreign_keys=[reporter_id])
     target = db.relationship('User', foreign_keys=[target_id])
+
+class Inquiry(db.Model):
+    __tablename__ = 'inquiries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    answer = db.Column(db.Text, nullable=True) 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    
+    writer = db.relationship('User', backref='inquiries', foreign_keys=[user_id])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'content': self.content,
+            'answer': self.answer,
+            'date': self.created_at.strftime('%Y-%m-%d'),
+            'writer': self.writer.nickname if self.writer else "알 수 없음"
+        }

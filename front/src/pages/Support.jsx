@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Support() {
   // 0. 사용자 권한 상태
@@ -19,10 +19,24 @@ export default function Support() {
   ];
 
   // 4. 1:1 문의사항 로컬 목록 상태
-  const [inquiries, setInquiries] = useState([
-    { id: 1, title: "방장이 약속 장소에 나오지 않았어요.", content: "오늘 점심 파티 약속인데 방장님이 아무 말 없이 안 나오셨어요. 패널티 기능이 있나요?", writer: "leewh", date: "2026-06-30", answer: "안녕하세요, 투데이메뉴 관리자입니다. 불량 유저 이용 제한을 위해 매너 점수 기반 패널티 시스템을 즉시 가동하겠습니다." },
-    { id: 2, title: "룰렛 게임 판이 도중에 멈추는 현상이 있습니다.", content: "모바일 크롬 브라우저로 룰렛 돌릴 때 화면이 멈추는데 확인 부탁드립니다.", writer: "gildong", date: "2026-06-29", answer: null }
-  ]);
+  const [inquiries, setInquiries] = useState([]); 
+  
+  // 🌟 서버에서 데이터 가져오기
+  useEffect(() => {
+    const fetchInquiries = async () => {
+      try {
+        const response = await fetch('/api/support/inquiries'); 
+        if (response.ok) {
+          const data = await response.json();
+          setInquiries(data);
+        }
+      } catch (error) {
+        console.error("문의 목록을 가져오는 중 오류 발생:", error);
+      }
+    };
+
+    fetchInquiries();
+  }, []);
 
   // UI 인터랙션용 상태 (FAQ 모달, 아코디언 토글)
   const [activeFaq, setActiveFaq] = useState(null); 
@@ -44,46 +58,77 @@ export default function Support() {
   };
 
   // ✍️ 일반 회원 질문 생성 (모달 내부에서 작동)
-  const handleCreateInquiry = (e) => {
-    e.preventDefault();
-    setFormError("");
+  const handleCreateInquiry = async (e) => {
+  e.preventDefault();
+  setFormError("");
 
-    if (userRole !== "user") return;
+  const token = localStorage.getItem('token');
+  console.log("현재 토큰값:", token);
 
-    if (newTitle.trim().length < 4) {
-      setFormError("⚠️ 제목은 최소 4자 이상 입력해 주세요.");
-      return;
+  if (userRole !== "user") return;
+
+  if (newTitle.trim().length < 4) {
+    setFormError("제목은 최소 4자 이상 입력해 주세요.");
+    return;
+  }
+  if (newContent.trim().length < 10) {
+    setFormError("내용은 상세한 확인을 위해 10자 이상 적어주세요.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/support/inquiries', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        title: newTitle.trim(),
+        content: newContent.trim()
+      })
+    });
+
+    if (response.ok) {
+      const savedInquiry = await response.json();
+      setInquiries([savedInquiry, ...inquiries]);
+      setNewTitle("");
+      setNewContent("");
+      setIsInquiryModalOpen(false);
+      alert("문의사항이 서버에 정상적으로 등록되었습니다.");
+    } else {
+      setFormError("서버 저장에 실패했습니다.");
     }
-    if (newContent.trim().length < 10) {
-      setFormError("⚠️ 내용은 상세한 확인을 위해 10자 이상 적어주세요.");
-      return;
-    }
-
-    const newInquiry = {
-      id: Date.now(),
-      title: newTitle.trim(),
-      content: newContent.trim(),
-      writer: "leewh(회원)",
-      date: "2026-06-30",
-      answer: null
-    };
-
-    setInquiries([newInquiry, ...inquiries]);
-    setNewTitle("");
-    setNewContent("");
-    setIsInquiryModalOpen(false); // 작성 완료 후 모달 닫기
-    alert("📝 문의사항이 로컬에 임시 등록되었습니다.");
-  };
+  } catch (error) {
+    setFormError("네트워크 연결 오류가 발생했습니다.");
+  }
+};
 
   // 👑 관리자 답변 등록
-  const handleAddAnswer = (id) => {
-    if (userRole !== "admin") return;
-    if (!adminReplyText.trim()) return alert("답변 내용을 입력하세요.");
+  const handleAddAnswer = async (id) => {
+  if (userRole !== "admin") return;
+  if (!adminReplyText.trim()) return alert("답변 내용을 입력하세요.");
 
-    setInquiries(inquiries.map(item => item.id === id ? { ...item, answer: adminReplyText } : item));
-    setAdminReplyText("");
-    alert("👑 답변 등록이 완료되었습니다.");
-  };
+  try {
+    const response = await fetch(`/api/support/inquiries/${id}/answer`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer: adminReplyText })
+    });
+
+    if (response.ok) {
+      setInquiries(inquiries.map(item => 
+        item.id === id ? { ...item, answer: adminReplyText } : item
+      ));
+      setAdminReplyText("");
+      alert("👑 답변 등록이 완료되었습니다.");
+    } else {
+      alert("⚠️ 답변 등록 실패.");
+    }
+  } catch (error) {
+    console.error("오류 발생:", error);
+  }
+};
 
   // 🔍 클라이언트 사이드 실시간 필터링
   const filteredFaqs = faqData.filter(item => 

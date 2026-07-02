@@ -12,7 +12,7 @@ from flask_jwt_extended import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .models import Report, db
+from .models import Report, db, Inquiry
 from app import db
 from app.models import (
     User, Restaurant, Party, PartyMember,
@@ -26,6 +26,7 @@ menu_bp   = Blueprint('menu',   __name__, url_prefix='/api/menu')
 party_bp  = Blueprint('party',  __name__, url_prefix='/api/party')
 mypage_bp = Blueprint('mypage', __name__, url_prefix='/api/mypage')
 api_bp    = Blueprint('api',    __name__, url_prefix='/api')
+support_bp = Blueprint('support', __name__, url_prefix='/api/support')
 
 CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '피자', '카페', '술집']
 
@@ -517,7 +518,11 @@ def create_party():
 @jwt_login_required
 def join_party(party_id):
     user_id = int(get_jwt_identity())
-    party   = Party.query.get_or_404(party_id)
+    party = Party.query.get_or_404(party_id)
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': '사용자를 찾을 수 없습니다.'}), 404
 
     if party.status != StatusEnum.RECRUITING:
         return jsonify({'message': '모집이 마감된 파티입니다.'}), 400
@@ -526,11 +531,17 @@ def join_party(party_id):
     if any(m.user_id == user_id for m in party.members):
         return jsonify({'message': '이미 참여한 파티입니다.'}), 409
 
+    if user in party.kicked_users:
+        return jsonify({'message': '강퇴당한 파티에는 다시 참여할 수 없습니다.'}), 403
+
     db.session.add(PartyMember(party_id=party_id, user_id=user_id))
-    user = User.query.get(user_id)
+    
     user.manner_score = min(50.0, round(user.manner_score + 0.5, 1))
     db.session.commit()
+    
+    
     return jsonify({'message': '파티에 참여했습니다! 매너온도 +0.5°', 'manner_score': user.manner_score}), 200
+
 
 
 @party_bp.route('/<int:party_id>/chat', methods=['POST'])
@@ -573,7 +584,6 @@ def update_party_status(party_id):
     db.session.commit()
     return jsonify(serialize_party(party))
 
-# 파티 강퇴 (Host 전용)
 @party_bp.route('/<int:party_id>/kick/<int:target_user_id>', methods=['DELETE'])
 @jwt_login_required
 def kick_member(party_id, target_user_id):
@@ -585,8 +595,20 @@ def kick_member(party_id, target_user_id):
     
     member = PartyMember.query.filter_by(party_id=party_id, user_id=target_user_id, is_host=False).first_or_404()
     db.session.delete(member)
+    
+    target_user = User.query.get(target_user_id)
+    if target_user and target_user not in party.kicked_users:
+        party.kicked_users.append(target_user)
+
+    db.session.flush() 
+    
+    if len(party.members) == 0:
+        db.session.delete(party)
+        db.session.commit()
+        return jsonify({'message': '강퇴 후 파티원이 없어 파티가 삭제되었습니다.'}), 200
+    
     db.session.commit()
-    return jsonify({'message': '강퇴되었습니다.'}), 200
+    return jsonify({'message': '강퇴되었으며, 해당 파티에 재참여할 수 없습니다.'}), 200
 
 # 파티 모임 종료 (Host 전용)
 @party_bp.route('/<int:party_id>/finish', methods=['PATCH'])
@@ -663,24 +685,22 @@ def get_all_reports():
         'is_processed': r.is_processed
     } for r in reports]), 200
 
-@party_bp.route('/<int:party_id>', methods=['DELETE'])
+@party_bp.route('/<int:party_id>/cancel', methods=['PATCH'])
 @jwt_login_required
-def delete_party(party_id):
+def cancel_party(party_id):
     current_user_id = int(get_jwt_identity())
     party = Party.query.get_or_404(party_id)
- 
+    
     if party.host_id != current_user_id:
-        return jsonify({'message': '호스트만 파티를 삭제할 수 있습니다.'}), 403
+        return jsonify({'message': '호스트만 취소할 수 있습니다.'}), 403
     
     if len(party.members) > 1:
-        return jsonify({'message': '이미 참여 중인 멤버가 있어 파티를 삭제할 수 없습니다. 파티를 종료하거나 멤버를 모두 내보내주세요.'}), 400
+        return jsonify({'message': '이미 다른 파티원이 참여 중입니다. 파티를 취소할 수 없습니다.'}), 400
     
-    Report.query.filter_by(party_id=party_id).delete()
-
-    db.session.delete(party)
+    party.status = StatusEnum.CANCELLED 
     db.session.commit()
     
-    return jsonify({'message': '파티가 성공적으로 삭제되었습니다.'}), 200
+    return jsonify({'message': '파티가 취소되었습니다.'}), 200
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MYPAGE
@@ -1338,15 +1358,24 @@ def handle_disconnect():
 @party_bp.route('/<int:party_id>/leave', methods=['DELETE'])
 @jwt_login_required
 def leave_party(party_id):
-    """파티 탈퇴 (호스트는 불가)"""
+    """파티 탈퇴 (호스트는 불가, 인원 0명 시 파티 자동 삭제)"""
     user_id = int(get_jwt_identity())
-    party   = Party.query.get_or_404(party_id)
-    member  = PartyMember.query.filter_by(party_id=party_id, user_id=user_id).first()
+    party = Party.query.get_or_404(party_id)
+    member = PartyMember.query.filter_by(party_id=party_id, user_id=user_id).first()
+    
     if not member:
         return jsonify({'message': '파티 참여자가 아닙니다.'}), 404
     if member.is_host:
-        return jsonify({'message': '호스트는 탈퇴할 수 없습니다. 파티를 종료해주세요.'}), 403
+        return jsonify({'message': '호스트는 탈퇴할 수 없습니다. 파티를 종료하거나 취소해주세요.'}), 403
+
     db.session.delete(member)
+    db.session.flush()
+
+    if len(party.members) == 0:
+        db.session.delete(party)
+        db.session.commit()
+        return jsonify({'message': '파티를 탈퇴했습니다. 마지막 멤버이므로 파티가 자동 삭제되었습니다.'}), 200
+        
     db.session.commit()
     return jsonify({'message': '파티에서 탈퇴했습니다.'}), 200
 
@@ -1427,3 +1456,46 @@ def manner_vote_status():
         'remaining': max(0, 2 - used),
         'votes':     [{'target_id': v.target_id, 'is_positive': v.is_positive} for v in votes],
     }), 200
+
+
+# 1. 문의글 목록 불러오기 (GET)
+@support_bp.route('/inquiries', methods=['GET'])
+def get_inquiries():
+    inquiries = Inquiry.query.order_by(Inquiry.created_at.desc()).all()
+    return jsonify([i.to_dict() for i in inquiries]), 200
+
+# 2. 문의글 등록하기 (POST)
+@support_bp.route('/inquiries', methods=['POST'])
+@jwt_login_required
+def create_inquiry():
+    data = request.get_json()
+    if not data:
+        return jsonify({"msg": "JSON 데이터가 전달되지 않았습니다."}), 422
+    
+    title = data.get('title')
+    content = data.get('content')
+    
+    if not title or not content:
+        return jsonify({"msg": "제목(title)이나 내용(content)이 없습니다."}), 422
+    
+    try:
+        new_inquiry = Inquiry(
+            title=title,
+            content=content,
+            user_id=int(get_jwt_identity())
+        )
+        db.session.add(new_inquiry)
+        db.session.commit()
+        return jsonify(new_inquiry.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": f"데이터베이스 저장 오류: {str(e)}"}), 500
+
+# 3. 관리자 답변 달기 (PATCH)
+@support_bp.route('/inquiries/<int:id>/answer', methods=['PATCH'])
+@admin_required
+def answer_inquiry(id):
+    inquiry = Inquiry.query.get_or_404(id)
+    inquiry.answer = request.json['answer']
+    db.session.commit()
+    return jsonify(inquiry.to_dict()), 200
