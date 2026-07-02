@@ -6,15 +6,11 @@ instance_dir = basedir / 'instance'
 instance_dir.mkdir(exist_ok=True)
 
 _db_url = os.environ.get('DATABASE_URL', '')
+_db_url = _db_url.replace('?pgbouncer=true', '').replace('&pgbouncer=true', '')
 
-# postgres:// → postgresql://
 if _db_url.startswith('postgres://'):
     _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
 
-# pgbouncer 옵션 제거
-_db_url = _db_url.replace('?pgbouncer=true', '').replace('&pgbouncer=true', '')
-
-# psycopg 드라이버 추가
 if _db_url.startswith('postgresql://') and '+' not in _db_url:
     _db_url = _db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
 
