@@ -16,6 +16,8 @@ if _db_url.startswith('postgresql://') and '+' not in _db_url:
 
 print(f"[CONFIG] Final URI = {_db_url[:60]}")
 
+_is_psycopg = 'psycopg' in _db_url
+
 class Config:
     SECRET_KEY     = os.environ.get('SECRET_KEY') or 'dev-secret-key'
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'dev-jwt-key'
@@ -27,7 +29,6 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle':  300,
-        'connect_args':  {
-            'prepare_threshold': 0,
-        } if 'postgresql+psycopg' in (_db_url or '') else {},
+        **({'connect_args': {'prepare_threshold': 0}} if _is_psycopg else {}),
     }
+
