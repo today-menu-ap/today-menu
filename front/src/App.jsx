@@ -22,6 +22,7 @@ import NotFound      from './pages/NotFound'
 import ScrollToTop   from './components/ScrollToTop'
 import Company       from './pages/Company'
 import Terms         from './pages/Terms'
+import Terms2 from './pages/Terms2'
 import Support       from './pages/Support'
 import Notice        from './pages/Notice'
 
@@ -43,10 +44,19 @@ function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, loading,
-      login:  (data) => {
-        if (!data) return
-        const { access_token, refresh_token, ...userInfo } = data
-        setUser(Object.keys(userInfo).length ? userInfo : data)
+      login: (data) => {
+        if (!data || !data.access_token) return;
+
+        localStorage.setItem('token', data.access_token);
+
+        try {
+          TokenStore.setAccess(data.access_token);
+        } catch (e) {
+          console.warn("TokenStore 저장 실패, localStorage를 사용합니다.");
+        }
+
+        const { access_token, refresh_token, ...userInfo } = data;
+        setUser(Object.keys(userInfo).length ? userInfo : data);
       },
       logout: ()  => { TokenStore.clear(); setUser(null) },
     }}>
@@ -90,6 +100,7 @@ export default function App() {
                 <Route path="/game"                    element={<Game />} />
                 <Route path="/auth/naver/callback"     element={<NaverCallback />} />
                 <Route path="/company"                 element={<Company />} />
+
                 <Route path="/terms"                   element={<Terms />} />
                 <Route path="/support"                 element={<Support />} />
                 <Route path="/notice"                  element={<Notice />} />
