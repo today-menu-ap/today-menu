@@ -253,7 +253,7 @@ export default function Support() {
           {(activeTab === "all" || activeTab === "inquiry") && (
             <button
               onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
-              className="w-full sm:w-auto px-5 py-2 bg-[var(--bg-dark)] hover:opacity-90 text-white font-black text-xs sm:text-sm rounded-full shadow-md transition-all flex items-center justify-center gap-1"
+              className="w-full sm:w-auto px-5 py-2 font-black text-xs sm:text-sm rounded-full shadow-md transition-all flex items-center justify-center gap-1" style={{ background: "var(--color-primary)", color: "#fff" }}
             >
               <span>✍️</span> 1:1 문의하기
             </button>
