@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Support() {
-  // 0. 사용자 권한 상태
-  const [userRole, setUserRole] = useState("user"); // "user" (일반회원), "admin" (관리자)
+  // 0. 사용자 권한 상태 (테스트용)
+  const [userRole, setUserRole] = useState("user"); 
   
-  // 1. 현재 선택된 탭 상태 ("all", "faq", "inquiry")
+  // 1. UI 조작용 전역 상태 (탭, 검색어, 모달)
   const [activeTab, setActiveTab] = useState("all");
-
-  // 2. 검색어 상태
   const [searchQuery, setSearchQuery] = useState("");
+  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
+  const [activeFaq, setActiveFaq] = useState(null); 
+  const [openInquiryId, setOpenInquiryId] = useState(null); 
 
-  // 3. 자주 묻는 질문 (FAQ) 로컬 데이터
+  // 2. 페이지네이션 상태 (현재 페이지 관리)
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 3. 신규 글 입력 및 에러 제어 상태
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [formError, setFormError] = useState("");
+  const [adminReplyText, setAdminReplyText] = useState("");
+
+  // 4. 자주 묻는 질문 (FAQ) 고정 데이터
   const faqData = [
     { id: 1, q: "AI 챗봇이 제 위치와 다른 맛집을 추천해요.", a: "카카오 맵 API 연동을 위해 브라우저의 '위치 정보 제공' 동의가 필요합니다. 동의 후에도 오류가 난다면 마이페이지에서 설정을 확인해 주세요!" },
     { id: 2, q: "밥 친구 매칭 파티는 어떻게 참여하나요?", a: "파티 메뉴에서 모집 중인 동네 방을 선택한 후, '실시간 파티 참여' 버튼을 누르면 즉시 채팅방에 입장할 수 있습니다." },
@@ -19,73 +29,108 @@ export default function Support() {
   ];
 
   // 4. 1:1 문의사항 로컬 목록 상태
-  const [inquiries, setInquiries] = useState([
-    { id: 1, title: "방장이 약속 장소에 나오지 않았어요.", content: "오늘 점심 파티 약속인데 방장님이 아무 말 없이 안 나오셨어요. 패널티 기능이 있나요?", writer: "leewh", date: "2026-06-30", answer: "안녕하세요, 투데이메뉴 관리자입니다. 불량 유저 이용 제한을 위해 매너 점수 기반 패널티 시스템을 즉시 가동하겠습니다." },
-    { id: 2, title: "룰렛 게임 판이 도중에 멈추는 현상이 있습니다.", content: "모바일 크롬 브라우저로 룰렛 돌릴 때 화면이 멈추는데 확인 부탁드립니다.", writer: "gildong", date: "2026-06-29", answer: null }
-  ]);
+  const [inquiries, setInquiries] = useState([]); 
+  
+  // 🌟 서버에서 데이터 가져오기
+  useEffect(() => {
+    const fetchInquiries = async () => {
+      try {
+        const response = await fetch('/api/support/inquiries'); 
+        if (response.ok) {
+          const data = await response.json();
+          setInquiries(data);
+        }
+      } catch (error) {
+        console.error("문의 목록을 가져오는 중 오류 발생:", error);
+      }
+    };
 
-  // UI 인터랙션용 상태 (FAQ 모달, 아코디언 토글)
-  const [activeFaq, setActiveFaq] = useState(null); 
-  const [openInquiryId, setOpenInquiryId] = useState(null); 
+    fetchInquiries();
+  }, []);
 
-  // 🌟 [추가] 1:1 문의 작성 모달 열림/닫힘 상태
-  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
 
-  // 5. 질문 생성창 입력 폼 & 에러 상태
-  const [newTitle, setNewTitle] = useState("");
-  const [newContent, setNewContent] = useState("");
-  const [formError, setFormError] = useState("");
-  const [adminReplyText, setAdminReplyText] = useState("");
-
-  // 아코디언 제어
+  // 6. 문의글 아코디언 핸들러
   const handleInquiryToggle = (id) => {
     setOpenInquiryId(openInquiryId === id ? null : id);
     setAdminReplyText(""); 
   };
 
   // ✍️ 일반 회원 질문 생성 (모달 내부에서 작동)
-  const handleCreateInquiry = (e) => {
-    e.preventDefault();
-    setFormError("");
+  const handleCreateInquiry = async (e) => {
+  e.preventDefault();
+  setFormError("");
 
-    if (userRole !== "user") return;
 
-    if (newTitle.trim().length < 4) {
-      setFormError("⚠️ 제목은 최소 4자 이상 입력해 주세요.");
-      return;
+  const token = localStorage.getItem('token');
+  console.log("현재 토큰값:", token);
+
+  if (userRole !== "user") return;
+
+  if (newTitle.trim().length < 4) {
+    setFormError("제목은 최소 4자 이상 입력해 주세요.");
+    return;
+  }
+  if (newContent.trim().length < 10) {
+    setFormError("내용은 상세한 확인을 위해 10자 이상 적어주세요.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/support/inquiries', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        title: newTitle.trim(),
+        content: newContent.trim()
+      })
+    });
+
+    if (response.ok) {
+      const savedInquiry = await response.json();
+      setInquiries([savedInquiry, ...inquiries]);
+      setNewTitle("");
+      setNewContent("");
+      setIsInquiryModalOpen(false);
+      alert("문의사항이 서버에 정상적으로 등록되었습니다.");
+    } else {
+      setFormError("서버 저장에 실패했습니다.");
     }
-    if (newContent.trim().length < 10) {
-      setFormError("⚠️ 내용은 상세한 확인을 위해 10자 이상 적어주세요.");
-      return;
-    }
-
-    const newInquiry = {
-      id: Date.now(),
-      title: newTitle.trim(),
-      content: newContent.trim(),
-      writer: "leewh(회원)",
-      date: "2026-06-30",
-      answer: null
-    };
-
-    setInquiries([newInquiry, ...inquiries]);
-    setNewTitle("");
-    setNewContent("");
-    setIsInquiryModalOpen(false); // 작성 완료 후 모달 닫기
-    alert("📝 문의사항이 로컬에 임시 등록되었습니다.");
-  };
+  } catch (error) {
+    setFormError("네트워크 연결 오류가 발생했습니다.");
+  }
+};
 
   // 👑 관리자 답변 등록
-  const handleAddAnswer = (id) => {
-    if (userRole !== "admin") return;
-    if (!adminReplyText.trim()) return alert("답변 내용을 입력하세요.");
+  const handleAddAnswer = async (id) => {
+  if (userRole !== "admin") return;
+  if (!adminReplyText.trim()) return alert("답변 내용을 입력하세요.");
 
-    setInquiries(inquiries.map(item => item.id === id ? { ...item, answer: adminReplyText } : item));
-    setAdminReplyText("");
-    alert("👑 답변 등록이 완료되었습니다.");
-  };
 
-  // 🔍 클라이언트 사이드 실시간 필터링
+  try {
+    const response = await fetch(`/api/support/inquiries/${id}/answer`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer: adminReplyText })
+    });
+
+    if (response.ok) {
+      setInquiries(inquiries.map(item => 
+        item.id === id ? { ...item, answer: adminReplyText } : item
+      ));
+      setAdminReplyText("");
+      alert("👑 답변 등록이 완료되었습니다.");
+    } else {
+      alert("⚠️ 답변 등록 실패.");
+    }
+  } catch (error) {
+    console.error("오류 발생:", error);
+  }
+};
+
+  // 🔍 [필터링 및 페이징] 실시간 내부 검색 반영
   const filteredFaqs = faqData.filter(item => 
     item.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.a.toLowerCase().includes(searchQuery.toLowerCase())
@@ -96,40 +141,52 @@ export default function Support() {
     item.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
-    <div className="min-h-screen pb-20">
-      
-      {/* 🛠️ 시연 및 테스트용 권한 탭 스위처 */}
-      <div className="fixed bottom-4 left-4 bg-white p-3 rounded-[16px] shadow-xl border border-[var(--color-accent)] z-50 flex gap-2 text-xs">
-        <span className="font-bold self-center text-[var(--text-secondary)]">시연 권한:</span>
-        <button onClick={() => { setUserRole("user"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "user" ? "bg-[var(--color-primary)] text-white" : "bg-[var(--bg-surface)] text-[var(--text-muted)]"}`}>일반회원</button>
-        <button onClick={() => { setUserRole("admin"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "admin" ? "bg-[var(--bg-dark)] text-white" : "bg-[var(--bg-surface)] text-[var(--text-muted)]"}`}>관리자</button>
-      </div>
+  // 🔢 [페이지네이션 핵심 수식] 페이지당 1개 슬라이싱 연산
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(filteredInquiries.length / itemsPerPage) || 1;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentInquiries = filteredInquiries.slice(indexOfFirstItem, indexOfLastItem);
 
-      {/* 1. 타이틀 영역 */}
-      <div className="bg-transparent py-8 text-center border-b border-[var(--color-accent)]/40">
-        <h2 className="page-title">고객센터</h2>
-      </div>
+  return (
+  // 🌟 bg-[#FDFAD1]를 제거하고 bg-transparent를 넣어 투명하게 만듭니다.
+  <div className="bg-transparent min-h-screen text-gray-800 pb-20 font-sans antialiased">
+    
+    {/* 🛠️ 시연 및 테스트용 권한 탭 스위처 */}
+    <div className="fixed bottom-4 right-4 bg-white p-3 rounded-[16px] shadow-xl border border-[#FEB95C] z-50 flex gap-2 text-xs">
+      <span className="font-bold self-center text-gray-700">시연 권한:</span>
+      <button onClick={() => { setUserRole("user"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "user" ? "bg-[#F46C6F] text-white" : "bg-gray-100 text-gray-500"}`}>일반회원</button>
+      <button onClick={() => { setUserRole("admin"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "admin" ? "bg-gray-950 text-white" : "bg-gray-100 text-gray-500"}`}>관리자</button>
+    </div>
+
+    {/* 1. 타이틀 영역 */}
+    <div className="bg-transparent py-8 text-center border-b border-[#FEB95C]/40">
+      <h1 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">고객센터</h1>
+    </div>
+    
+    {/* 이하 나머지 코드 동일 ... */}
+
 
       <div className="max-w-5xl mx-auto px-4 mt-8">
         
-        {/* 2. 실시간 클라이언트 검색창 */}
+        {/* 2. 클라이언트 검색창 */}
         <div className="max-w-2xl mx-auto mb-8">
           <div className="relative">
             <input 
               type="text" 
-              placeholder="궁금한 단어를 입력하면 아래 리스트가 실시간으로 필터링됩니다..."
+              placeholder="찾는 단어를 입력하면 아래 리스트가 실시간으로 필터링됩니다..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2.5 px-6 bg-white text-[var(--text-primary)] text-sm font-medium rounded-full shadow-sm border border-[var(--border-color)] focus:outline-none focus:border-[var(--color-primary)]"
+
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} // 검색 시 첫 페이징으로 이동하여 에러 방어
+              className="w-full py-2.5 px-6 bg-white text-gray-950 text-sm font-medium rounded-full shadow-sm border-2 border-[#FEB95C] focus:outline-none focus:border-[#F46C6F]"
+
             />
             <span className="absolute right-5 top-3 text-[var(--text-light)] text-sm">🔍</span>
           </div>
         </div>
 
-        {/* 3. 탭(Tab) 메뉴 바 및 우측 문의하기 버튼 영역 */}
+        {/* 3. 상단 탭 제어 & 우측 1:1 문의 버튼 배치 */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-10">
-          {/* 왼쪽: 탭 필터 */}
           <div className="flex gap-2">
             {[
               { id: "all", label: "📋 전체" },
@@ -138,7 +195,7 @@ export default function Support() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => { setActiveTab(tab.id); setCurrentPage(1); }}
                 className={`px-4 py-2 rounded-full font-black text-xs sm:text-sm transition-all border shadow-sm
                   ${activeTab === tab.id 
                     ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]" 
@@ -150,7 +207,7 @@ export default function Support() {
             ))}
           </div>
 
-          {/* 🌟 오른쪽 끝 구석: 1:1 문의하기 모달 트리거 버튼 */}
+          {/* ✍️ 오른쪽 끝 구석에 깔끔히 박힌 모달 오픈 버튼 */}
           {(activeTab === "all" || activeTab === "inquiry") && (
             <button
               onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
@@ -161,7 +218,7 @@ export default function Support() {
           )}
         </div>
 
-        {/* 4. 자주 묻는 질문 구역 */}
+        {/* 4. FAQ 목록 출력 */}
         {(activeTab === "all" || activeTab === "faq") && (
           <section className="mb-12">
             <div className="mb-4">
@@ -187,17 +244,19 @@ export default function Support() {
           </section>
         )}
 
-        {/* 5. 문의사항 리스트 구역 */}
+        {/* 5. 1:1 문의사항 리스트 및 다이나믹 대규모 페이지네이션 구역 */}
         {(activeTab === "all" || activeTab === "inquiry") && (
           <section className="mb-10">
             <div className="mb-4">
               <span className="inline-block px-4 py-1.5 bg-[var(--bg-surface)] border border-[var(--color-accent)] text-[var(--text-primary)] font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">문의사항</span>
             </div>
-            <div className="bg-white rounded-[24px] shadow-sm border border-[var(--border-color)] overflow-hidden divide-y divide-[var(--border-color)]">
-              {filteredInquiries.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)] py-8 text-center bg-white">등록된 문의글이 없거나 검색 결과가 없습니다.</p>
+
+            <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+              {currentInquiries.length === 0 ? (
+                <p className="text-sm text-gray-500 py-8 text-center bg-white">등록된 문의글이 없거나 검색 결과가 없습니다.</p>
+
               ) : (
-                filteredInquiries.map(item => {
+                currentInquiries.map(item => {
                   const isOpened = openInquiryId === item.id;
                   return (
                     <div key={item.id} className="divide-y divide-[var(--border-color)]">
@@ -258,16 +317,77 @@ export default function Support() {
                 })
               )}
             </div>
+
+            {/* 🔢 [요청 기능] << < 숫자 > >> 형태의 콘트롤러 바 */}
+            {filteredInquiries.length > 0 && (
+              <div className="flex justify-center items-center gap-1 mt-8">
+                {/* 처음으로 [<<] */}
+                <button 
+                  onClick={() => setCurrentPage(1)} 
+                  disabled={currentPage === 1}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &lt;&lt;
+                </button>
+
+                {/* 이전으로 [<] */}
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                  disabled={currentPage === 1}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &lt;
+                </button>
+
+                {/* 페이지 목록 루프 출력 */}
+                {Array.from({ length: totalPages }, (_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`px-3 py-1.5 rounded text-xs font-bold border shadow-sm transition-all
+                        ${currentPage === pageNumber 
+                          ? "bg-[#F46C6F] text-white border-[#F46C6F]" 
+                          : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                        }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+
+                {/* 다음으로 [>] */}
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &gt;
+                </button>
+
+                {/* 끝으로 [>>] */}
+                <button 
+                  onClick={() => setCurrentPage(totalPages)} 
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &gt;&gt;
+                </button>
+              </div>
+            )}
           </section>
         )}
 
       </div>
 
-      {/* 🌟 6. [위치 변경] 새로운 문의 등록 모달 팝업창 */}
+      {/* ✍️ 6. 1:1 새로운 문의 등록 모달 팝업창 */}
       {isInquiryModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
-          <div className="bg-white p-6 rounded-[24px] max-w-xl w-full shadow-2xl border border-[var(--border-color)] relative">
-            <h3 className="text-sm font-black text-[var(--text-primary)] mb-4 flex items-center gap-1.5">
+
+          <div className="bg-white p-6 rounded-[24px] max-w-xl w-full shadow-2xl border border-gray-100 relative">
+            <h3 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-1.5">
+
               <span>✍️</span> 1:1 새로운 문의 등록하기
             </h3>
             
@@ -320,7 +440,6 @@ export default function Support() {
               </div>
             )}
             
-            {/* 우측 상단 닫기 X 버튼 */}
             <button 
               onClick={() => setIsInquiryModalOpen(false)} 
               className="absolute top-4 right-5 text-[var(--text-light)] hover:text-black font-bold text-sm"
@@ -346,7 +465,7 @@ export default function Support() {
             </div>
             <button 
               onClick={() => setActiveFaq(null)}
-              className="w-full py-2  hover:bg-black text-white font-bold text-xs rounded-full transition-colors"
+              className="w-full py-2 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-full transition-colors"
             >
               닫기
             </button>
