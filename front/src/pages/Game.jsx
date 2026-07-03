@@ -21,6 +21,7 @@ function Roulette({ menus }) {
   const angleRef = useRef(0)
   const [result, setResult] = useState(null)
   const [isSpinning, setIsSpinning] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [category, setCategory] = useState('전체')
 
   const slice = (2 * Math.PI) / (menus.length || 1)
