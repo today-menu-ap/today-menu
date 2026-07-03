@@ -27,7 +27,6 @@ const CATEGORIES = [
   '카페',
   '술집',
 ]
-
 const adBannerClass =
   'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px]'
 const adBannerLinkClass = 'block h-full w-full'
@@ -48,6 +47,14 @@ export default function Menu() {
   const [pagination, setPagination] = useState({ total: 0, pages: 1, page: 1, has_prev: false, has_next: false })
   const [loading, setLoading] = useState(false)
   const [searchInput, setSearchInput] = useState(q)
+
+  const handleRestaurantLike = (item) => {
+    setItems((prev) =>
+      prev.map((r) =>
+        r.id === item.id ? { ...r, is_liked: !r.is_liked } : r
+      )
+    )
+  }
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -89,26 +96,43 @@ export default function Menu() {
       </h1>
 
       <section className={adBannerClass}>
-          <Link to="/party" className={adBannerLinkClass} aria-label="파티 페이지로 이동">
-            <img className={adBannerImageClass} src="/img/banner/banner2.png" alt="파티 만들기 배너" />
-          </Link>
-        </section>
+        <Link to="/party" className={adBannerLinkClass} aria-label="파티 페이지로 이동">
+          <img className={adBannerImageClass} src="/img/banner/banner2.png" alt="파티 만들기 배너" />
+        </Link>
+      </section>
 
       {/* 카테고리 필터 */}
-      <div className="menu-filter-bar">
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '.9rem', fontWeight: 600, flexShrink: 0 }}>카테고리</span>
-          <div className="cat-scroll">
-            {CATEGORIES.map((c) => (
-              <button key={c}
-                className={`cat-pill${activeCat === c ? ' active' : ''}`}
-                onClick={() => go({ cat: c, page: 1, q: '' })}>
-                {CAT_ICON[c] && <span>{CAT_ICON[c]}</span>} {c}
-              </button>
-            ))}
-          </div>
+      <div className="mt-8 mb-13 flex flex-wrap items-center gap-7">
+        <span className="shrink-0 text-[0.95rem] font-bold">
+          카테고리
+        </span>
+
+        <div className="flex flex-wrap gap-5">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c}
+              className={`
+    cursor-pointer whitespace-nowrap
+    rounded-full
+    bg-[var(--color-white)]
+    px-4 py-2
+    text-[0.85rem]
+    font-bold
+    text-black
+    shadow-sm
+    transition-all duration-150
+    hover:bg-[var(--color-accent)] hover: shadow-md
+    ${activeCat === c ? "scale-105 shadow-md ring-2 ring-white/60" : ""}
+  `}
+              onClick={() => go({ cat: c, page: 1, q: "" })}
+            >
+              {CAT_ICON[c] && <span className="mr-1">{CAT_ICON[c]}</span>}
+              {c}
+            </button>
+          ))}
         </div>
       </div>
+
 
       {/* 검색창-2 */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
@@ -161,7 +185,10 @@ export default function Menu() {
         loading ? (
           <div className="grid-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="card" style={{ height: 220, background: 'var(--bg-surface)', animation: 'pulse 1.5s infinite' }} />
+              <div
+                key={i}
+                className="card h-[220px] bg-[var(--bg-surface)] animate-pulse-1500"
+              />
             ))}
           </div>
         ) : items.length === 0 ? (
@@ -169,7 +196,8 @@ export default function Menu() {
             <div className="empty-icon"></div>
             <p>{q ? `"${q}" 검색 결과가 없습니다.` : '등록된 식당이 없습니다.'}</p>
             {q && (
-              <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }}
+              <button className="btn btn-secondary btn-sm 
+              mt-[12px]"
                 onClick={() => { setSearchInput(''); go({ q: '', page: 1 }) }}>
                 전체보기
               </button>
@@ -183,6 +211,8 @@ export default function Menu() {
                 r={r}
                 to={`/menu/${r.id}`}
                 showPartyBadge={!!user}
+                liked={Boolean(r.is_liked)}
+                onToggleLike={handleRestaurantLike}
               />
             ))}
           </div>
