@@ -258,10 +258,10 @@ function TwentyQ({ menus = [] }) {
   const [reveal, setReveal] = useState(false);
 
   // 카테고리별 이모지 매칭 함수 (정의 누락 방지용)
-  const catIcon = (category) => {
-    const icons = { '한식': '🍚', '분식': '🍢', '일식': '🍣', '양식': '🍝', '중식': '🐼', '치킨': '🍗', '카페': '☕' };
-    return icons[category] || '🍔';
-  };
+
+
+
+
 
   useEffect(() => {
     if (menus.length > 0) {
