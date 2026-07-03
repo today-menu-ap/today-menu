@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { TokenStore } from '../api/axiosInstance';
 
 export default function Support() {
+  const location = useLocation();
+
   // 0. 사용자 권한 상태 (테스트용)
-  const [userRole, setUserRole] = useState("user"); 
-  
+  const [userRole, setUserRole] = useState("user");
+
   // 1. UI 조작용 전역 상태 (탭, 검색어, 모달)
-  const [activeTab, setActiveTab] = useState("all");
+  // 마이페이지 고객문의 버튼에서 state.defaultTab='inquiry' 로 진입 시 자동 선택
+  const [activeTab, setActiveTab] = useState(location.state?.defaultTab ?? "all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null); 
   const [openInquiryId, setOpenInquiryId] = useState(null); 
+
+  // location state 변경 시 탭 자동 전환
+  useEffect(() => {
+    if (location.state?.defaultTab) {
+      setActiveTab(location.state.defaultTab);
+      if (location.state.defaultTab === 'inquiry') {
+        setIsInquiryModalOpen(true);
+      }
+    }
+  }, [location.state]);
 
   // 2. 페이지네이션 상태 (현재 페이지 관리)
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,24 +44,16 @@ export default function Support() {
   ];
 
   // 4. 1:1 문의사항 로컬 목록 상태
-  const [inquiries, setInquiries] = useState([]); 
-  
-  // 🌟 서버에서 데이터 가져오기
-  useEffect(() => {
-    const fetchInquiries = async () => {
-      try {
-        const response = await fetch('/api/support/inquiries'); 
-        if (response.ok) {
-          const data = await response.json();
-          setInquiries(data);
-        }
-      } catch (error) {
-        console.error("문의 목록을 가져오는 중 오류 발생:", error);
-      }
-    };
-
-    fetchInquiries();
-  }, []);
+  const [inquiries, setInquiries] = useState(() => {
+    const _d = [
+      { id: 1, title: "방장이 약속 장소에 나오지 않았어요.", content: "오늘 점심 파티 약속인데 방장님이 아무 말 없이 안 나오셨어요.", writer: "leewh", date: "2026-06-30", answer: "안녕하세요, 투데이메뉴 관리자입니다. 패널티 시스템을 즉시 가동하겠습니다." },
+      { id: 2, title: "룰렛 게임 판이 도중에 멈추는 현상이 있습니다.", content: "모바일 크롬 브라우저로 룰렛 돌릴 때 화면이 멈추는데 확인 부탁드립니다.", writer: "gildong", date: "2026-06-29", answer: null }
+    ];
+    try {
+      const saved = localStorage.getItem('today_menu_inquiries');
+      return saved ? JSON.parse(saved) : _d;
+    } catch { return _d; }
+  });
 
 
   // 6. 문의글 아코디언 핸들러
@@ -56,52 +63,70 @@ export default function Support() {
   };
 
   // ✍️ 일반 회원 질문 생성 (모달 내부에서 작동)
+  // ✍️ 일반 회원 질문 생성 (수정된 버전)
   const handleCreateInquiry = async (e) => {
-  e.preventDefault();
-  setFormError("");
+    e.preventDefault();
+    setFormError("");
 
+    const token = TokenStore.getAccess();
 
-  const token = localStorage.getItem('token');
-  console.log("현재 토큰값:", token);
-
-  if (userRole !== "user") return;
-
-  if (newTitle.trim().length < 4) {
-    setFormError("제목은 최소 4자 이상 입력해 주세요.");
-    return;
-  }
-  if (newContent.trim().length < 10) {
-    setFormError("내용은 상세한 확인을 위해 10자 이상 적어주세요.");
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/support/inquiries', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        title: newTitle.trim(),
-        content: newContent.trim()
-      })
-    });
-
-    if (response.ok) {
-      const savedInquiry = await response.json();
-      setInquiries([savedInquiry, ...inquiries]);
-      setNewTitle("");
-      setNewContent("");
-      setIsInquiryModalOpen(false);
-      alert("문의사항이 서버에 정상적으로 등록되었습니다.");
-    } else {
-      setFormError("서버 저장에 실패했습니다.");
+    if (!token || token === "null" || token === "undefined") {
+      setFormError("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+      return;
     }
-  } catch (error) {
-    setFormError("네트워크 연결 오류가 발생했습니다.");
-  }
-};
+
+    const trimmedTitle = newTitle.trim();
+    const trimmedContent = newContent.trim();
+    
+    if (trimmedTitle.length < 4) {
+      setFormError("제목은 최소 4자 이상 입력해 주세요.");
+      return;
+    }
+    if (trimmedContent.length < 10) {
+      setFormError("내용은 상세한 확인을 위해 10자 이상 적어주세요.");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/support/inquiries', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: trimmedTitle,
+          content: trimmedContent
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+          const updated = [result, ...inquiries];
+          setInquiries(updated);
+          try {
+              localStorage.setItem('today_menu_inquiries', JSON.stringify(updated));
+          } catch (e) {
+              console.error("로컬 스토리지 저장 실패", e);
+          }
+          setNewTitle("");
+          setNewContent("");
+          setIsInquiryModalOpen(false);
+          alert("문의사항이 등록되었습니다.");
+          const fetchList = await fetch('http://localhost:5000/api/support/inquiries');
+          const newList = await fetchList.json();
+          setInquiries(newList);
+      } else {
+          // 서버에서 422 에러가 올 경우 상세 내용 출력
+          console.error("서버 에러:", result);
+          setFormError(result.msg || "문의 등록에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("네트워크 에러:", error);
+      setFormError("네트워크 오류 발생");
+    }
+  };
 
   // 👑 관리자 답변 등록
   const handleAddAnswer = async (id) => {
@@ -117,9 +142,13 @@ export default function Support() {
     });
 
     if (response.ok) {
-      setInquiries(inquiries.map(item => 
+      const updated2 = inquiries.map(item =>
         item.id === id ? { ...item, answer: adminReplyText } : item
-      ));
+      );
+    setInquiries(updated2);
+    try { localStorage.setItem('today_menu_inquiries', JSON.stringify(updated2)); } catch {}
+    // dummy to avoid duplicate
+    ((x) => x);
       setAdminReplyText("");
       alert("👑 답변 등록이 완료되었습니다.");
     } else {
@@ -142,7 +171,7 @@ export default function Support() {
   );
 
   // 🔢 [페이지네이션 핵심 수식] 페이지당 1개 슬라이싱 연산
-  const itemsPerPage = 5;
+  const itemsPerPage = 1;
   const totalPages = Math.ceil(filteredInquiries.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -209,13 +238,13 @@ export default function Support() {
 
           {/* ✍️ 오른쪽 끝 구석에 깔끔히 박힌 모달 오픈 버튼 */}
           {(activeTab === "all" || activeTab === "inquiry") && (
-            <button
-              onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
-              className="w-full sm:w-auto px-5 py-2 bg-[var(--bg-dark)] hover:opacity-90 text-white font-black text-xs sm:text-sm rounded-full shadow-md transition-all flex items-center justify-center gap-1"
-            >
-              <span>✍️</span> 1:1 문의하기
-            </button>
-          )}
+  <button
+    onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
+    className="w-full sm:w-auto px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-sm rounded-[12px] shadow-sm transition-colors flex items-center justify-center gap-1.5"
+  >
+    <span>✍️</span> 1:1 문의하기
+  </button>
+)}
         </div>
 
         {/* 4. FAQ 목록 출력 */}

@@ -61,6 +61,11 @@ export async function getRandomMenus(count = 64, cat = '전체') {
   return data.items ?? []
 }
 
+export async function getTrending() {
+  const { data } = await api.get('/api/menu/trending')
+  return data
+}
+
 export async function deleteRestaurant(restId) {
   const { data } = await api.delete(`/api/menu/${restId}`)
   return data
@@ -158,6 +163,36 @@ export async function reportPartyMember(partyId, targetId, reason) {
   return data
 }
 
+
+// ── REVIEW ───────────────────────────────────────────────────────────────────
+export async function getReviews(restId) {
+  const { data } = await api.get(`/api/menu/${restId}/reviews`)
+  return data
+}
+export async function createReview(restId, { rating, content }) {
+  const { data } = await api.post(`/api/menu/${restId}/reviews`, { rating, content })
+  return data
+}
+export async function deleteReview(restId, reviewId) {
+  const { data } = await api.delete(`/api/menu/${restId}/reviews/${reviewId}`)
+  return data
+}
+export async function getMyReviews() {
+  const { data } = await api.get('/api/mypage/reviews')
+  return data
+}
+
+// ── MANNER HISTORY ────────────────────────────────────────────────────────────
+export async function getMannerHistory() {
+  const { data } = await api.get('/api/manner/history')
+  return data
+}
+
+// ── LIKE LOG ─────────────────────────────────────────────────────────────────
+export async function createLikeLog(restaurantId) {
+  const { data } = await api.post('/api/like/create', { restaurant_id: restaurantId })
+  return data
+}
 // ── MANNER VOTE ──────────────────────────────────────────────────────────────
 /** 매너온도 투표 — 하루 2회 제한 */
 export async function voteManner(targetUserId, isPositive) {
@@ -171,7 +206,6 @@ export async function getMannerVoteStatus() {
   return data
 }
 
-// ── LIKE ──────────────────────────────────────────────────────────────────────
 export async function toggleLike(logId) {
   const { data } = await api.post(`/api/like/${logId}`)
   return data
@@ -196,4 +230,54 @@ export async function getFamilySites() {
     { id: 2, name: '네이버', url: 'https://www.naver.com' },
     { id: 3, name: '카카오', url: 'https://www.kakao.com' },
   ]
+}
+
+// ── FAVORITES (찜 기능) ───────────────────────────────────────────────────────
+
+export async function toggleFavorite(restaurantId) {
+  const { data } = await api.post('/api/favorites', { restaurant_id: restaurantId });
+  return data; // { status: "added" | "removed", msg: "..." }
+}
+
+export async function getMyFavorites() {
+  const { data } = await api.get('/api/favorites');
+  return data; // [ {id, name, ...}, ... ]
+}
+
+/**
+ * 찜하기 액션 (통합 관리)
+ * @param {string|number} id - 대상 ID (로그ID 또는 식당ID)
+ * @param {Array} list - 현재 컴포넌트의 리스트 상태
+ * @param {Function} setter - 리스트 상태를 변경하는 함수
+ * @param {string} type - 'log' 또는 'restaurant' 구분
+ */
+export async function toggleFavoriteAction({ id, list, setter, type = 'log' }) {
+  const previousList = [...list];
+
+  // 1. 낙관적 업데이트: 서버 응답 전 UI를 먼저 변경하여 즉각적인 피드백 제공
+  setter((prev) =>
+    prev.map((item) => {
+      const targetId = type === 'log' ? item.log_id : item.restaurant?.id ?? item.id;
+      return targetId === id ? { ...item, is_liked: !item.is_liked } : item;
+    })
+  );
+
+  try {
+    // 2. 서버 요청: 타입에 따라 적절한 API 엔드포인트 호출
+    const res = type === 'log' 
+      ? await toggleLike(id)           // 기존 log용 API
+      : await toggleFavorite(id);     // 새 식당용 API
+
+    // 3. 서버 응답으로 최종 상태 확정
+    setter((prev) =>
+      prev.map((item) => {
+        const targetId = type === 'log' ? item.log_id : item.restaurant?.id ?? item.id;
+        return targetId === id ? { ...item, is_liked: res.liked ?? (res.status === 'added') } : item;
+      })
+    );
+  } catch (err) {
+    console.error('찜하기 처리 실패:', err);
+    setter(previousList); // 에러 발생 시 원상복구
+    alert('찜 상태 변경에 실패했습니다.');
+  }
 }
