@@ -12,7 +12,7 @@ const adBannerLinkClass = 'block h-full w-full'
 const adBannerImageClass =
   'h-full w-full object-contain object-center'
 
-const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥡', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 피자: '🍕', 카페: '☕' }
+const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥡', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 카페: '☕' }
 const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
 
 const SAMPLE_RESTAURANTS = [

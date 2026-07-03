@@ -11,7 +11,6 @@ const CAT_ICON = {
   '양식': '🥩',
   '분식': '🍜',
   '치킨': '🍗',
-  '피자': '🍕',
   '카페': '☕',
   '술집': '🍺',
 }
@@ -23,7 +22,6 @@ const CATEGORIES = [
   '양식',
   '분식',
   '치킨',
-  '피자',
   '카페',
   '술집',
 ]
@@ -71,7 +69,6 @@ export default function Menu() {
 
   const handleSearch = () => go({ q: searchInput, page: 1 })
 
-  // 페이지네이션
   const pageNums = () => {
     const total = pagination.pages
     if (total <= 10) return Array.from({ length: total }, (_, i) => i + 1)
@@ -84,15 +81,13 @@ export default function Menu() {
 
   return (
     <>
-      <h1 className="mb-6 text-[2.2rem] font-black">
-        맛집찾기
-      </h1>
+      <h1 className="mb-6 text-[2.2rem] font-black">맛집찾기</h1>
 
       <section className={adBannerClass}>
-          <Link to="/party" className={adBannerLinkClass} aria-label="파티 페이지로 이동">
-            <img className={adBannerImageClass} src="/img/banner/banner2.png" alt="파티 만들기 배너" />
-          </Link>
-        </section>
+        <Link to="/party" className={adBannerLinkClass} aria-label="파티 페이지로 이동">
+          <img className={adBannerImageClass} src="/img/banner/banner2.png" alt="파티 만들기 배너" />
+        </Link>
+      </section>
 
       {/* 카테고리 필터 */}
       <div className="menu-filter-bar">
@@ -110,14 +105,11 @@ export default function Menu() {
         </div>
       </div>
 
-      {/* 검색창-2 */}
+      {/* 검색창 */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <div className="w-full max-w-[420px]">
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSearch();
-            }}
+            onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
             className="flex h-12 items-center gap-3"
           >
             <input
@@ -127,7 +119,6 @@ export default function Menu() {
               onChange={(e) => setSearchInput(e.target.value)}
               className="h-12 min-w-0 flex-1 rounded-full border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white px-5 text-[0.92rem] font-semibold text-[var(--text-primary)] shadow-[0_4px_18px_rgba(244,108,111,0.08)] outline-none placeholder:text-[#9D8C86]"
             />
-
             <button
               type="submit"
               className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
@@ -153,74 +144,58 @@ export default function Menu() {
             <option value="new">최신순</option>
           </select>
         </div>
-      </div >
-
+      </div>
 
       {/* 그리드카드 */}
-      {
-        loading ? (
-          <div className="grid-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="card" style={{ height: 220, background: 'var(--bg-surface)', animation: 'pulse 1.5s infinite' }} />
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon"></div>
-            <p>{q ? `"${q}" 검색 결과가 없습니다.` : '등록된 식당이 없습니다.'}</p>
-            {q && (
-              <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }}
-                onClick={() => { setSearchInput(''); go({ q: '', page: 1 }) }}>
-                전체보기
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-4 gap-x-[15px] gap-y-[30px] max-lg:grid-cols-2 max-[540px]:grid-cols-2" id="menuGrid">
-            {items.map((r) => (
-              <RestaurantCard
-                key={r.id}
-                r={r}
-                to={`/menu/${r.id}`}
-                showPartyBadge={!!user}
-              />
-            ))}
-          </div>
-        )
-      }
-
+      {loading ? (
+        <div className="grid-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="card" style={{ height: 220, background: 'var(--bg-surface)', animation: 'pulse 1.5s infinite' }} />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon"></div>
+          <p>{q ? `"${q}" 검색 결과가 없습니다.` : '등록된 식당이 없습니다.'}</p>
+          {q && (
+            <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }}
+              onClick={() => { setSearchInput(''); go({ q: '', page: 1 }) }}>
+              전체보기
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-x-[15px] gap-y-[30px] max-lg:grid-cols-2 max-[540px]:grid-cols-2" id="menuGrid">
+          {items.map((r) => (
+            <RestaurantCard key={r.id} r={r} to={`/menu/${r.id}`} showPartyBadge={!!user} />
+          ))}
+        </div>
+      )}
 
       {/* 페이지네이션 */}
-      {
-        pagination.pages > 1 && (
-          <div className="pagination">
-            {/* 처음 */}
-            {pagination.page > 1 && (
-              <button className="page-btn" onClick={() => go({ page: 1 })}>{'<<'}</button>
-            )}
-            {/* 이전 */}
-            {pagination.has_prev && (
-              <button className="page-btn" onClick={() => go({ page: page - 1 })}>{'<'}</button>
-            )}
-            {/* 번호 */}
-            {pageNums().map((p) => (
-              <button key={p}
-                className={`page-btn${p === pagination.page ? ' active' : ''}`}
-                onClick={() => go({ page: p })}>
-                {p}
-              </button>
-            ))}
-            {/* 다음 */}
-            {pagination.has_next && (
-              <button className="page-btn" onClick={() => go({ page: page + 1 })}>{'>'}</button>
-            )}
-            {/* 끝 */}
-            {pagination.page < pagination.pages && (
-              <button className="page-btn" onClick={() => go({ page: pagination.pages })}>{'>>'}</button>
-            )}
-          </div>
-        )
-      }
+      {pagination.pages > 1 && (
+        <div className="pagination">
+          {pagination.page > 1 && (
+            <button className="page-btn" onClick={() => go({ page: 1 })}>{'<<'}</button>
+          )}
+          {pagination.has_prev && (
+            <button className="page-btn" onClick={() => go({ page: page - 1 })}>{'<'}</button>
+          )}
+          {pageNums().map((p) => (
+            <button key={p}
+              className={`page-btn${p === pagination.page ? ' active' : ''}`}
+              onClick={() => go({ page: p })}>
+              {p}
+            </button>
+          ))}
+          {pagination.has_next && (
+            <button className="page-btn" onClick={() => go({ page: page + 1 })}>{'>'}</button>
+          )}
+          {pagination.page < pagination.pages && (
+            <button className="page-btn" onClick={() => go({ page: pagination.pages })}>{'>>'}</button>
+          )}
+        </div>
+      )}
     </>
   )
 }
