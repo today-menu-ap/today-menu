@@ -129,16 +129,30 @@ export default function MyPage() {
   const dislikes = processTags(user.preferences?.dislikes);
   const mannerScore = user.manner_score;
 
+  // liked_logs(추천 찜) + rec_logs(is_liked) 통합
   const allLikedLogs = [
-    ...apiLikedLogs,
-    ...rec_logs.filter((r) => r.is_liked && !apiLikedLogs.find(f => f.log_id === r.log_id))
+    ...apiLikedLogs.map(item => ({
+      ...item,
+      log_id: item.log_id ?? item.id ?? Math.random(),
+      restaurant: item.restaurant || null,
+    })),
+    ...rec_logs.filter(r =>
+      r.is_liked &&
+      !apiLikedLogs.find(f =>
+        (f.restaurant?.restaurant_id ?? f.restaurant?.id) ===
+        (r.restaurant?.restaurant_id ?? r.restaurant?.id)
+      )
+    )
   ];
 
   const displayLikedLogs = Array.from(
     new Map(
-      allLikedLogs.map(item => [item.restaurant?.restaurant_id ?? item.restaurant?.id ?? item.log_id, item])
+      allLikedLogs.map(item => [
+        item.restaurant?.restaurant_id ?? item.restaurant?.id ?? item.log_id,
+        item
+      ])
     ).values()
-  );
+  ).filter(item => item.restaurant);
 
   const R = 36
   const circ = 2 * Math.PI * R
@@ -356,7 +370,7 @@ export default function MyPage() {
                 <Link
                   to={`/menu/${log.restaurant?.restaurant_id ?? log.restaurant?.id ?? log.recommended_restaurant_id}`}
                   className="card rest-card"
-                  key={log.log_id}
+                  key={log.log_id ?? log.restaurant?.restaurant_id}
                 >
                   <RestaurantImage
                     category={log.restaurant?.category}
@@ -405,7 +419,7 @@ export default function MyPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
           {rec_logs.slice(0, 3).map((log) => (
             <div
-              key={log.log_id}
+              key={log.log_id ?? log.restaurant?.restaurant_id}
               style={{ display: 'flex', gap: 14, padding: 14, background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)' }}
             >
               <Link
