@@ -117,26 +117,28 @@ export default function MyPage() {
 
   // ── 찜 토글 ──────────────────────────────────────────────────────────────
   const handleLike = async (log) => {
-    const targetId = log?.restaurant?.id ?? log?.log_id
-    // 낙관적 업데이트 — liked_logs에서 즉시 제거
+    const logId  = log?.log_id
+    const restId = log?.restaurant?.id ?? log?.restaurant?.restaurant_id
+
+    // 낙관적 업데이트 — is_liked 토글
     setData(prev => ({
       ...prev,
-      liked_logs: (prev?.liked_logs || []).filter(l =>
-        (l.restaurant?.id ?? l.restaurant?.restaurant_id ?? l.log_id) !== targetId
-      )
+      liked_logs: (prev?.liked_logs || []).map(l => {
+        if (logId && l.log_id === logId) return { ...l, is_liked: !l.is_liked }
+        if (restId && (l.restaurant?.id ?? l.restaurant?.restaurant_id) === restId) return { ...l, is_liked: !l.is_liked }
+        return l
+      })
     }))
-    // 서버에 찜 해제 요청
+
+    // 서버 요청
     try {
-      if (log?.log_id) {
-        await toggleLike(log.log_id)
-      } else if (targetId) {
-        // log_id 없으면 favorites API로 해제
-        const { data: res } = await import('../api/axiosInstance').then(m =>
-          m.default.post('/api/favorites', { restaurant_id: targetId })
-        )
+      if (logId) {
+        await toggleLike(logId)
+      } else if (restId) {
+        const apiMod = (await import('../api/axiosInstance')).default
+        await apiMod.post('/api/favorites', { restaurant_id: restId })
       }
     } catch {
-      // 실패 시 데이터 재로드
       getMyPage().then(d => setData(d)).catch(() => {})
     }
   }
@@ -489,7 +491,7 @@ export default function MyPage() {
                 </div>
               </Link>
               <button
-                onClick={() => handleLike(log.log_id)}
+                onClick={() => handleLike(log)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
               >
                 {log.is_liked ? '❤️' : '🤍'}
