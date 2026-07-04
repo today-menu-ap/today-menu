@@ -116,12 +116,12 @@ export default function MyPage() {
   }
 
   // ── 찜 토글 ──────────────────────────────────────────────────────────────
-  const handleLike = async (logId) => {
+  const handleLike = async (log) => {
     toggleFavoriteAction({
-      id: item.id,
-      list: trending,
-      setter: setTrending,
-      type: 'restaurant'
+      id: log?.restaurant?.id ?? log?.log_id ?? log,
+      list: [],
+      setter: () => {},
+      type: 'log'
     });
   }
 
