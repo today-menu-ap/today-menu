@@ -1194,15 +1194,18 @@ A. 마이페이지 최하단 '회원 탈퇴하기' 버튼을 누르세요.
         matched_restaurants = []
         if mode == 'recommend':
             # 전체 식당 중 응답에 이름이 언급된 것 찾기 (최대 3개)
-            all_rests_for_match = Restaurant.query.all()
+            from sqlalchemy import text as _t_match
+            all_rests_for_match = db.session.execute(_t_match(
+                "SELECT restaurant_id, name, category, address, avg_rating FROM restaurants"
+            )).fetchall()
             for r in all_rests_for_match:
-                if r.name in reply:
+                if r[1] in reply:
                     matched_restaurants.append({
-                        'id':       r.restaurant_id,
-                        'name':     r.name,
-                        'category': r.category,
-                        'address':  r.address,
-                        'avg_rating': r.avg_rating,
+                        'id':       r[0],
+                        'name':     r[1],
+                        'category': r[2],
+                        'address':  r[3],
+                        'avg_rating': r[4],
                     })
                     if len(matched_restaurants) >= 3:
                         break
