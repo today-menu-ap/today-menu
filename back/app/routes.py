@@ -667,6 +667,20 @@ def report_user(party_id):
 
     return jsonify({'message': '신고가 접수되었습니다.', 'kicked': False}), 201
 
+
+@party_bp.route('/reports/<int:report_id>/process', methods=['PATCH'])
+@jwt_login_required
+def process_report(report_id):
+    """신고 처리 완료 (관리자 전용)"""
+    user_id = int(get_jwt_identity())
+    user = User.query.get_or_404(user_id)
+    if user.role != RoleEnum.ADMIN:
+        return jsonify({'message': '권한이 없습니다.'}), 403
+    report = Report.query.get_or_404(report_id)
+    report.is_processed = True
+    db.session.commit()
+    return jsonify({'message': '처리 완료되었습니다.'}), 200
+
 @party_bp.route('/admin/reports', methods=['GET'])
 @jwt_login_required
 def get_all_reports():
