@@ -142,6 +142,7 @@ export default function MenuDetail() {
   }
 
   return (
+    <>
     <div className="mx-auto max-w-[1180px] pb-12">
       <button
         type="button"
@@ -402,13 +403,13 @@ export default function MenuDetail() {
         </main>
       </div>
     </div>
-      {showReview && (
-        <ReviewModal
-          restId={rest?.restaurant_id ?? rest?.id}
-          restName={rest?.name}
-          onClose={() => setShowReview(false)}
-        />
-      )}
+    {showReview && (
+      <ReviewModal
+        restId={rest?.restaurant_id ?? rest?.id}
+        restName={rest?.name}
+        onClose={() => setShowReview(false)}
+      />
+    )}
     </>
   )
 }
