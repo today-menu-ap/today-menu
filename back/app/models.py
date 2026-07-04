@@ -206,3 +206,25 @@ class Review(db.Model):
             'nickname':      self.writer.nickname if self.writer else '알 수 없음',
             'created_at':    self.created_at.strftime('%Y-%m-%d') if self.created_at else '',
         }
+class Notice(db.Model):
+    """공지사항"""
+    __tablename__ = 'notices'
+
+    notice_id  = db.Column(db.Integer, primary_key=True)
+    category   = db.Column(db.String(20), default='서비스')
+    title      = db.Column(db.String(200), nullable=False)
+    content    = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    author_id  = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+
+    author = db.relationship('User', foreign_keys=[author_id])
+
+    def to_dict(self):
+        return {
+            'id':         self.notice_id,
+            'category':   self.category,
+            'title':      self.title,
+            'content':    self.content,
+            'date':       self.created_at.strftime('%Y-%m-%d') if self.created_at else '',
+            'created_at': self.created_at.isoformat() if self.created_at else '',
+        }
