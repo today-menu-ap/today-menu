@@ -19,10 +19,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    if (user.role !== 'admin') { navigate('/'); return }
+    if (user.role?.toLowerCase() !== 'admin') { navigate('/'); return }
   }, [user])
 
-  if (!user || user.role !== 'admin') return null
+  if (!user || user.role?.toLowerCase() !== 'admin') return null
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px' }}>
