@@ -263,6 +263,14 @@ export default function MyPage() {
         </div>
       </div>
 
+      {user?.role?.toLowerCase() === 'admin' && (
+        <div style={{ marginBottom: 16 }}>
+          <Link to="/admin"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: 10, textDecoration: 'none', fontWeight: 700, color: 'var(--color-danger)' }}>
+            ⚙️ 관리자 페이지로 이동
+          </Link>
+        </div>
+      )}
       {/* ── 프로필 + 매너점수 ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 16 }}>
         <div className="profile-section">
