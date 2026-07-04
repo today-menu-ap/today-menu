@@ -305,4 +305,3 @@ export async function deleteNotice(noticeId) {
   const { data } = await api.delete(`/api/notices/${noticeId}`)
   return data
 }
-
