@@ -292,3 +292,17 @@ export async function toggleFavoriteAction({ id, list, setter, type = 'log' }) {
     alert('찜 상태 변경에 실패했습니다.');
   }
 }
+// ── NOTICES ──────────────────────────────────────────────────────────────────
+export async function getNotices() {
+  const { data } = await api.get('/api/notices')
+  return data
+}
+export async function createNotice({ title, content, category }) {
+  const { data } = await api.post('/api/notices', { title, content, category })
+  return data
+}
+export async function deleteNotice(noticeId) {
+  const { data } = await api.delete(`/api/notices/${noticeId}`)
+  return data
+}
+
