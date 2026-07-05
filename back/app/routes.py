@@ -848,6 +848,110 @@ def admin_users():
 @api_bp.route('/admin/users/<int:user_id>', methods=['DELETE'])
 @admin_required
 def admin_delete_user(user_id):
+
+@api_bp.route('/admin/reviews', methods=['GET'])
+@admin_required
+def admin_get_reviews():
+    """전체 리뷰 목록 (관리자 전용)"""
+    page     = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 15, type=int)
+    q        = request.args.get('q', '')
+
+    query = Review.query.order_by(Review.created_at.desc())
+    if q:
+        query = query.join(Restaurant, Review.restaurant_id == Restaurant.restaurant_id)                     .filter(Restaurant.name.ilike(f'%{q}%'))
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    reviews = []
+    for rv in pagination.items:
+        user = User.query.get(rv.user_id)
+        rest = Restaurant.query.get(rv.restaurant_id)
+        reviews.append({
+            'review_id':   rv.review_id,
+            'rating':      rv.rating,
+            'content':     rv.content,
+            'created_at':  rv.created_at.strftime('%Y-%m-%d') if rv.created_at else '',
+            'user_id':     rv.user_id,
+            'nickname':    user.nickname if user else '탈퇴한 사용자',
+            'restaurant_id': rv.restaurant_id,
+            'restaurant_name': rest.name if rest else '삭제된 식당',
+        })
+    return jsonify({
+        'reviews': reviews,
+        'total':   pagination.total,
+        'pages':   pagination.pages,
+        'page':    page,
+    }), 200
+
+@api_bp.route('/admin/reviews', methods=['GET'])
+@admin_required
+def admin_get_reviews():
+    """전체 리뷰 목록 (관리자 전용)"""
+    page     = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 15, type=int)
+    q        = request.args.get('q', '')
+
+    query = Review.query.order_by(Review.created_at.desc())
+    if q:
+        query = query.join(Restaurant, Review.restaurant_id == Restaurant.restaurant_id)                     .filter(Restaurant.name.ilike(f'%{q}%'))
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    reviews = []
+    for rv in pagination.items:
+        user = User.query.get(rv.user_id)
+        rest = Restaurant.query.get(rv.restaurant_id)
+        reviews.append({
+            'review_id':   rv.review_id,
+            'rating':      rv.rating,
+            'content':     rv.content,
+            'created_at':  rv.created_at.strftime('%Y-%m-%d') if rv.created_at else '',
+            'user_id':     rv.user_id,
+            'nickname':    user.nickname if user else '탈퇴한 사용자',
+            'restaurant_id': rv.restaurant_id,
+            'restaurant_name': rest.name if rest else '삭제된 식당',
+        })
+    return jsonify({
+        'reviews': reviews,
+        'total':   pagination.total,
+        'pages':   pagination.pages,
+        'page':    page,
+    }), 200
+
+
+@api_bp.route('/admin/reviews/<int:review_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_review(review_id):
+    """리뷰 삭제 (관리자 전용)"""
+    review = Review.query.get_or_404(review_id)
+    rest_id = review.restaurant_id
+    db.session.delete(review)
+    db.session.commit()
+    # 평균 별점 업데이트
+    try:
+        _update_avg_rating(rest_id)
+        db.session.commit()
+    except: pass
+    return jsonify({'message': '리뷰가 삭제되었습니다.'}), 200
+
+
+
+
+@api_bp.route('/admin/reviews/<int:review_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_review(review_id):
+    """리뷰 삭제 (관리자 전용)"""
+    review = Review.query.get_or_404(review_id)
+    rest_id = review.restaurant_id
+    db.session.delete(review)
+    db.session.commit()
+    # 평균 별점 업데이트
+    try:
+        _update_avg_rating(rest_id)
+        db.session.commit()
+    except: pass
+    return jsonify({'message': '리뷰가 삭제되었습니다.'}), 200
+
+
     user = User.query.get_or_404(user_id)
     db.session.delete(user)
     db.session.commit()
