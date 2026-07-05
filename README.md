@@ -129,44 +129,44 @@
 > 아래 이미지를 클릭하면 크게 볼 수 있습니다.
 
 ### 🏠 홈 화면
-![홈 화면](./docs/screenshots/home.png)
+![홈 화면](./docs/screenshots/home.jpeg)
 > 오늘의 추천 맛집, 카테고리 필터, 근처 식당 안내
 
 ### 🔐 로그인 / 회원가입
 | 로그인 | 회원가입 |
 |---|---|
-| ![로그인](./docs/screenshots/login.png) | ![회원가입](./docs/screenshots/register.png) |
+| ![로그인](./docs/screenshots/login.jpeg) | ![회원가입](./docs/screenshots/register.jpeg) |
 
 ### 🍱 메뉴 목록 / 상세
 | 메뉴 목록 | 메뉴 상세 + 리뷰 |
 |---|---|
-| ![메뉴 목록](./docs/screenshots/menu.png) | ![메뉴 상세](./docs/screenshots/menu_detail.png) |
+| ![메뉴 목록](./docs/screenshots/menu.jpeg) | ![메뉴 상세](./docs/screenshots/menu_detail.jpeg) |
 
 ### 👥 파티
 | 파티 목록 | 파티 상세 + 채팅 |
 |---|---|
-| ![파티 목록](./docs/screenshots/party.png) | ![파티 상세](./docs/screenshots/party_detail.png) |
+| ![파티 목록](./docs/screenshots/party.jpeg) | ![파티 상세](./docs/screenshots/party_detail.jpeg) |
 
 ### 🤖 AI 챗봇
-![챗봇](./docs/screenshots/chatbot.png)
+![챗봇](./docs/screenshots/chatbot.jpeg)
 > 개인화 메뉴 추천 / Q&A 모드
 
 ### 👤 마이페이지
 | 마이페이지 | 매너온도 상세 |
 |---|---|
-| ![마이페이지](./docs/screenshots/mypage.png) | ![매너온도](./docs/screenshots/manner.png) |
+| ![마이페이지](./docs/screenshots/mypage.jpeg) | ![매너온도](./docs/screenshots/manner.jpeg) |
 
 ### 🎮 게임
 | 룰렛 | 월드컵 |
 |---|---|
-| ![룰렛](./docs/screenshots/game_roulette.png) | ![월드컵](./docs/screenshots/game_worldcup.png) |
+| ![룰렛](./docs/screenshots/game_roulette.jpeg) | ![월드컵](./docs/screenshots/game_worldcup.jpeg) |
 
 | 스무고개 | 뽑기 |
 |---|---|
-| ![스무고개](./docs/screenshots/game_twentyq.png) | ![뽑기](./docs/screenshots/game_scratch.png) |
+| ![스무고개](./docs/screenshots/game_twentyq.jpeg) | ![뽑기](./docs/screenshots/game_scratch.jpeg) |
 
 ### 🛎️ 고객센터
-![고객센터](./docs/screenshots/support.png)
+![고객센터](./docs/screenshots/support.jpeg)
 
 ---
 
