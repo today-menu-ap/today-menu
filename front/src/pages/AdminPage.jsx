@@ -10,6 +10,7 @@ const TABS = [
   { id: 'inquiries',   label: '💬 문의 관리' },
   { id: 'notices',     label: '📢 공지 관리' },
   { id: 'reports',     label: '🚨 신고 관리' },
+  { id: 'reviews',     label: '⭐ 리뷰 관리' },
 ]
 
 export default function AdminPage() {
@@ -50,17 +51,21 @@ export default function AdminPage() {
       {tab === 'inquiries'   && <InquiryManager />}
       {tab === 'notices'     && <NoticeManager />}
       {tab === 'reports'     && <ReportManager />}
+      {tab === 'reviews'     && <ReviewManager />}
     </div>
   )
 }
 
 // ── 유저 관리 ────────────────────────────────────────────────────────────────
 function UserManager() {
+  const PAGE_SIZE = 15
   const [users,   setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [search,  setSearch]  = useState('')
+  const [page,    setPage]    = useState(1)
 
   useEffect(() => { load() }, [])
+  useEffect(() => { setPage(1) }, [search])
 
   const load = async () => {
     setLoading(true)
@@ -80,14 +85,16 @@ function UserManager() {
     } catch (e) { alert(e.response?.data?.message ?? '실패') }
   }
 
-  const filtered = users.filter(u =>
+  const filtered   = users.filter(u =>
     u.nickname?.includes(search) || u.email?.includes(search)
   )
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ fontWeight: 900 }}>유저 목록 ({users.length}명)</h2>
+        <h2 style={{ fontWeight: 900 }}>유저 목록 ({filtered.length}명)</h2>
         <input
           placeholder="닉네임/이메일 검색"
           value={search}
@@ -97,49 +104,98 @@ function UserManager() {
         />
       </div>
       {loading ? <div style={{ textAlign: 'center', padding: 40 }}>로딩 중...</div> : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.85rem' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-surface)', borderBottom: '2px solid var(--border-color)' }}>
-                {['ID', '닉네임', '이메일', '매너온도', '역할', '가입일', '관리'].map(h => (
-                  <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(u => (
-                <tr key={u.user_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{u.user_id}</td>
-                  <td style={{ padding: '10px 12px', fontWeight: 700 }}>{u.nickname}</td>
-                  <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{u.email}</td>
-                  <td style={{ padding: '10px 12px' }}>
-                    <span style={{ color: u.manner_score >= 36.5 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: 700 }}>
-                      {u.manner_score}°C
-                    </span>
-                  </td>
-                  <td style={{ padding: '10px 12px' }}>
-                    <span style={{
-                      background: u.role === 'admin' ? '#FFF5F5' : 'var(--bg-surface)',
-                      color: u.role === 'admin' ? 'var(--color-danger)' : 'var(--text-muted)',
-                      padding: '2px 8px', borderRadius: 6, fontSize: '.75rem', fontWeight: 700,
-                    }}>{u.role}</span>
-                  </td>
-                  <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
-                    {u.created_at?.slice(0, 10)}
-                  </td>
-                  <td style={{ padding: '10px 12px' }}>
-                    {u.role !== 'admin' && (
-                      <button onClick={() => handleDelete(u.user_id, u.nickname)}
-                        style={{ padding: '4px 10px', background: 'transparent', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 6, fontSize: '.78rem', cursor: 'pointer', fontWeight: 700 }}>
-                        강제탈퇴
-                      </button>
-                    )}
-                  </td>
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.85rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-surface)', borderBottom: '2px solid var(--border-color)' }}>
+                  {['ID', '닉네임', '이메일', '매너온도', '역할', '가입일', '관리'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700 }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {paginated.map(u => (
+                  <tr key={u.user_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{u.user_id}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 700 }}>{u.nickname}</td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{u.email}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span style={{ color: u.manner_score >= 36.5 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: 700 }}>
+                        {u.manner_score}°C
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span style={{
+                        background: u.role === 'admin' ? '#FFF5F5' : 'var(--bg-surface)',
+                        color: u.role === 'admin' ? 'var(--color-danger)' : 'var(--text-muted)',
+                        padding: '2px 8px', borderRadius: 6, fontSize: '.75rem', fontWeight: 700,
+                      }}>{u.role}</span>
+                    </td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
+                      {u.created_at?.slice(0, 10)}
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      {u.role !== 'admin' && (
+                        <button onClick={() => handleDelete(u.user_id, u.nickname)}
+                          style={{ padding: '4px 10px', background: 'transparent', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 6, fontSize: '.78rem', cursor: 'pointer', fontWeight: 700 }}>
+                          강제탈퇴
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 16 }}>
+              <button
+                onClick={() => setPage(1)} disabled={page === 1}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1 ? 'default' : 'pointer', opacity: page===1 ? 0.4 : 1, fontSize: '.82rem' }}>
+                «
+              </button>
+              <button
+                onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1 ? 'default' : 'pointer', opacity: page===1 ? 0.4 : 1, fontSize: '.82rem' }}>
+                ‹
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let p
+                if (totalPages <= 5) p = i + 1
+                else if (page <= 3) p = i + 1
+                else if (page >= totalPages - 2) p = totalPages - 4 + i
+                else p = page - 2 + i
+                return (
+                  <button key={p} onClick={() => setPage(p)}
+                    style={{
+                      padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6,
+                      background: page === p ? 'var(--color-primary)' : 'var(--bg-white)',
+                      color: page === p ? '#fff' : 'var(--text-primary)',
+                      cursor: 'pointer', fontWeight: page === p ? 700 : 400, fontSize: '.82rem'
+                    }}>
+                    {p}
+                  </button>
+                )
+              })}
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page === totalPages}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages ? 'default' : 'pointer', opacity: page===totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
+                ›
+              </button>
+              <button
+                onClick={() => setPage(totalPages)} disabled={page === totalPages}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages ? 'default' : 'pointer', opacity: page===totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
+                »
+              </button>
+              <span style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
+                {page} / {totalPages} 페이지 ({filtered.length}명)
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -589,3 +645,144 @@ function ReportManager() {
     </div>
   )
 }
+
+// ── 리뷰 관리 ────────────────────────────────────────────────────────────────
+function ReviewManager() {
+  const PAGE_SIZE = 15
+  const [reviews,  setReviews]  = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [page,     setPage]     = useState(1)
+  const [total,    setTotal]    = useState(0)
+  const [search,   setSearch]   = useState('')
+  const [searchQ,  setSearchQ]  = useState('')
+
+  useEffect(() => { load(1, '') }, [])
+
+  const load = async (p = page, q = searchQ) => {
+    setLoading(true)
+    try {
+      const { data } = await api.get('/api/admin/reviews', {
+        params: { page: p, per_page: PAGE_SIZE, q }
+      })
+      setReviews(data.reviews ?? [])
+      setTotal(data.total ?? 0)
+      setPage(p)
+    } catch { alert('리뷰 목록 로드 실패') }
+    finally { setLoading(false) }
+  }
+
+  const handleSearch = () => {
+    setSearchQ(search)
+    load(1, search)
+  }
+
+  const handleDelete = async (reviewId) => {
+    if (!window.confirm('리뷰를 삭제하시겠습니까?')) return
+    try {
+      await api.delete(`/api/admin/reviews/${reviewId}`)
+      setReviews(prev => prev.filter(r => r.review_id !== reviewId))
+      setTotal(prev => prev - 1)
+      alert('삭제되었습니다.')
+    } catch (e) { alert(e.response?.data?.message ?? '삭제 실패') }
+  }
+
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+
+  const STARS = (n) => '★'.repeat(n) + '☆'.repeat(5 - n)
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h2 style={{ fontWeight: 900 }}>리뷰 목록 (총 {total}개)</h2>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            placeholder="식당명 검색"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            className="form-control"
+            style={{ width: 180, fontSize: '.85rem' }}
+          />
+          <button onClick={handleSearch}
+            style={{ padding: '8px 14px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: '.85rem' }}>
+            검색
+          </button>
+        </div>
+      </div>
+
+      {loading ? <div style={{ textAlign: 'center', padding: 40 }}>로딩 중...</div> : (
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.85rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-surface)', borderBottom: '2px solid var(--border-color)' }}>
+                  {['ID', '식당명', '작성자', '별점', '내용', '작성일', '관리'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {reviews.map(rv => (
+                  <tr key={rv.review_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{rv.review_id}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 700 }}>{rv.restaurant_name}</td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{rv.nickname}</td>
+                    <td style={{ padding: '10px 12px', color: '#F6AD55', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      {STARS(rv.rating)}
+                    </td>
+                    <td style={{ padding: '10px 12px', maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {rv.content || '-'}
+                    </td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                      {rv.created_at}
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <button onClick={() => handleDelete(rv.review_id)}
+                        style={{ padding: '4px 10px', background: 'transparent', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 6, fontSize: '.78rem', cursor: 'pointer', fontWeight: 700 }}>
+                        삭제
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {reviews.length === 0 && (
+                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>리뷰가 없습니다.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 16 }}>
+              <button onClick={() => load(1)} disabled={page===1}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1?'default':'pointer', opacity: page===1?0.4:1, fontSize: '.82rem' }}>«</button>
+              <button onClick={() => load(page-1)} disabled={page===1}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1?'default':'pointer', opacity: page===1?0.4:1, fontSize: '.82rem' }}>‹</button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let p
+                if (totalPages <= 5) p = i + 1
+                else if (page <= 3) p = i + 1
+                else if (page >= totalPages - 2) p = totalPages - 4 + i
+                else p = page - 2 + i
+                return (
+                  <button key={p} onClick={() => load(p)}
+                    style={{ padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: page===p ? 'var(--color-primary)' : 'var(--bg-white)', color: page===p ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: page===p ? 700 : 400, fontSize: '.82rem' }}>
+                    {p}
+                  </button>
+                )
+              })}
+              <button onClick={() => load(page+1)} disabled={page===totalPages}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages?'default':'pointer', opacity: page===totalPages?0.4:1, fontSize: '.82rem' }}>›</button>
+              <button onClick={() => load(totalPages)} disabled={page===totalPages}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages?'default':'pointer', opacity: page===totalPages?0.4:1, fontSize: '.82rem' }}>»</button>
+              <span style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
+                {page} / {totalPages} 페이지
+              </span>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
