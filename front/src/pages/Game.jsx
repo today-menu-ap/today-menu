@@ -22,6 +22,7 @@ function Roulette() {
   const [items,      setItems]      = useState([])
   const [fetching,   setFetching]   = useState(false)
 
+  // 카테고리 바뀔 때마다 API에서 해당 카테고리 메뉴 새로 불러오기
   useEffect(() => {
     setFetching(true)
     setResult(null)
@@ -149,6 +150,8 @@ function Roulette() {
         )}
       </div>
 
+      {/* 룰렛 캔버스 */}
+
       {fetching ? (
         <div style={{ padding: 40, color: 'var(--text-muted)', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}>🍽️</div>
@@ -228,7 +231,8 @@ function TwentyQ({ menus }) {
   const [reveal,  setReveal]  = useState(false)
 
   useEffect(() => {
-    if (menus.length > 0) setTarget(menus[Math.floor(Math.random() * menus.length)])
+    if (menus.length > 0)
+      setTarget(menus[Math.floor(Math.random() * menus.length)])
   }, [menus])
 
   const answer = (yn) => {
@@ -259,22 +263,35 @@ function TwentyQ({ menus }) {
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '3rem', margin: '12px 0' }}>🕵️</div>
           <div style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: 8 }}>스무고개로 메뉴 맞추기!</div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', marginBottom: 20 }}>10개 질문으로 메뉴를 알아맞혀드려요.</p>
-          <button className="btn btn-primary" style={{ padding: '12px 36px', borderRadius: 50 }} onClick={() => setStep(0)}>시작하기</button>
+          <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', lineHeight: 1.7, marginBottom: 20 }}>
+            예스/노 10개 질문으로 오늘 먹을 메뉴를 알아맞혀드려요.<br/>솔직하게 대답할수록 정확해져요!
+          </p>
+          <button className="btn btn-primary" style={{ padding: '12px 36px', borderRadius: 50 }}
+            onClick={() => setStep(0)}>시작하기</button>
         </div>
       )}
       {step < 10 && answers.length <= step && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: '.8rem', color: 'var(--text-muted)' }}>
             <span>질문 {step + 1} / {TWENTY_QS.length}</span>
+            <div style={{ display: 'flex', gap: 3 }}>
+              {TWENTY_QS.map((_, i) => (
+                <div key={i} style={{ width: 18, height: 5, borderRadius: 3, background: i < answers.length ? 'var(--color-primary)' : i === step ? 'var(--color-secondary)' : 'var(--bg-surface)' }} />
+              ))}
+            </div>
           </div>
           <div style={{ background: 'var(--bg-white)', borderRadius: 16, padding: '24px 20px', border: '1px solid var(--border-color)', textAlign: 'center', marginBottom: 20 }}>
             <div style={{ fontSize: '2rem', marginBottom: 10 }}>🤔</div>
-            <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{q.q}</div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.5 }}>{q.q}</div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[['yes','✅ 예!','#F0FFF4','#276749'], ['no','❌ 아니오','#FFF5F5','#C53030']].map(([val, label, bg, color]) => (
-              <button key={val} onClick={() => answer(val)} style={{ padding: 20, borderRadius: 14, border: `2px solid ${color}`, background: bg, fontWeight: 800, cursor: 'pointer', color }}>{label}</button>
+              <button key={val} onClick={() => answer(val)}
+                style={{ padding: 20, borderRadius: 14, border: `2px solid ${color}`, background: bg, fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', color, transition: 'transform .1s' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                {label}
+              </button>
             ))}
           </div>
         </div>
@@ -282,12 +299,21 @@ function TwentyQ({ menus }) {
       {step === 10 && guess && (
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🎯</div>
+          <div style={{ fontWeight: 900, fontSize: '1.2rem', marginBottom: 16 }}>AI의 추천 메뉴는...</div>
           <div style={{ background: 'linear-gradient(135deg,#EBF8FF,#BEE3F8)', borderRadius: 16, padding: '24px 20px', marginBottom: 16 }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>{catIcon(guess.category)}</div>
-            <div style={{ fontWeight: 900, fontSize: '1.4rem' }}>{guess.name}</div>
-            <div style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>{guess.category} · {guess.address}</div>
-            <Link to={`/menu/${guess.id}`} style={{ display: 'inline-block', marginTop: 12, padding: '6px 20px', background: '#3182CE', color: '#fff', borderRadius: 20, fontSize: '.82rem', fontWeight: 700, textDecoration: 'none' }}>식당 보러가기 →</Link>
+            <div style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: 4 }}>{guess.name}</div>
+            <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{guess.category}</div>
           </div>
+          <button onClick={() => setReveal(!reveal)}
+            style={{ fontSize: '.82rem', color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border-color)', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', marginBottom: 12 }}>
+            {reveal ? '숨기기' : '🔍 내가 생각했던 음식 공개'}
+          </button>
+          {reveal && (
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: '.88rem' }}>
+              {target?.name} ({target?.category})
+            </div>
+          )}
           <button className="btn btn-secondary" onClick={reset}>🔄 다시하기</button>
         </div>
       )}
@@ -303,6 +329,7 @@ function WorldCup({ menus }) {
   const [bracket,  setBracket]  = useState([])
   const [round,    setRound]    = useState(0)
   const [winners,  setWinners]  = useState([])
+  const [roundNum, setRoundNum] = useState(0)
   const [champion, setChampion] = useState(null)
   const [choosing, setChoosing] = useState(null)
 
@@ -344,7 +371,7 @@ function WorldCup({ menus }) {
       <div style={{ background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)', border: '3px solid var(--color-accent)', borderRadius: 20, padding: '28px 24px', margin: '16px 0', display: 'inline-block' }}>
         <div style={{ fontSize: '3.5rem', marginBottom: 8 }}>{catIcon(champion.category)}</div>
         <div style={{ fontWeight: 900, fontSize: '1.5rem' }}>{champion.name}</div>
-        <Link to={`/menu/${champion.id}`} style={{ display: 'inline-block', marginTop: 14, padding: '8px 24px', background: 'var(--color-accent)', color: '#fff', borderRadius: 20, fontSize: '.88rem', textDecoration: 'none' }}>식당 보러가기 →</Link>
+        <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{champion.category}</div>
       </div>
       <div><button className="btn btn-secondary" onClick={init}>🔄 다시하기</button></div>
     </div>
@@ -380,9 +407,9 @@ function WorldCup({ menus }) {
 function ScratchCard({ menus }) {
   const canvasRef  = useRef(null)
   const scratching = useRef(false)
-  const [prize,     setPrize]     = useState(null)
+  const [prize,    setPrize]    = useState(null)
   const [revealed, setRevealed] = useState(0)
-  const [done,      setDone]      = useState(false)
+  const [done,     setDone]     = useState(false)
   const TARGET = 60
 
   const pick = useCallback(() => menus.length > 0 ? menus[Math.floor(Math.random() * menus.length)] : null, [menus])
@@ -424,6 +451,10 @@ function ScratchCard({ menus }) {
     if (e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top }
     return { x: e.clientX - rect.left, y: e.clientY - rect.top }
   }
+
+  const onStart = (e) => { e.preventDefault(); scratching.current = true; scratch(...Object.values(getPos(e, canvasRef.current))) }
+  const onMove  = (e) => { e.preventDefault(); if (!scratching.current) return; scratch(...Object.values(getPos(e, canvasRef.current))) }
+  const onEnd   = ()  => { scratching.current = false }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
@@ -564,9 +595,11 @@ function Ladder({ menus }) {
       ) : (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: '.9rem' }}>💡 아래 사다리에 태울 메뉴를 2개 이상 입력창에 적어 추가해 주세요!</div>
       )}
-      {result && (
-        <div style={{ fontWeight: 900, marginTop: 10, padding: '10px 24px', background: 'rgba(244,108,111,0.1)', color: 'var(--color-primary)', borderRadius: 50, fontSize: '1.1rem' }}>
-          🎯 당첨 메뉴: {items[result.bottomIdx]}
+      {done && prize && (
+        <div style={{ textAlign: 'center', animation: 'popIn .4s ease' }}>
+          <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--color-accent)', marginBottom: 8 }}>🎉 당첨!</div>
+          <div style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--text-primary)' }}>{prize.name}</div>
+          <div style={{ fontSize: '.85rem', color: 'var(--text-muted)', marginTop: 4 }}>{prize.category}</div>
         </div>
       )}
     </div>
@@ -574,34 +607,374 @@ function Ladder({ menus }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 메인 컴포넌트 (Game)
+// 게임 5 — 사다리타기
 // ══════════════════════════════════════════════════════════════════════════════
-function Game() {
+function Ladder({ menus }) {
+  const MAX    = 6
+  const NUM_ROWS = 10
+  const COLORS = ['#E53E3E','#DD6B20','#F6AD55','#38A169','#3182CE','#6B46C1']
+
+  const canvasRef = useRef(null)
+  const [items,    setItems]    = useState([])
+  const [inputVal, setInputVal] = useState('')
+  // ladder: { rungs: [{row,col}], yPositions: [y0,y1,...] } — yPositions는 실제 픽셀 Y값
+  const [ladder,   setLadder]   = useState({ rungs: [], yPositions: [] })
+  const [result,   setResult]   = useState(null)
+  const [animPath, setAnimPath] = useState(null)
+  const [fetching, setFetching] = useState(false)
+
+  // ── 사다리 생성 핵심 규칙 ─────────────────────────────────────────────────
+  // 규칙: 같은 row에서 어떤 세로줄도 좌우 동시에 연결 금지 (Y자 교차 방지)
+  const buildLadder = useCallback((n, canvasH) => {
+    const PAD = 36, TOP = 52, BOT = canvasH - 52
+
+    // 1) 각 row의 Y 위치를 불균등하게 생성
+    //    → 구간을 NUM_ROWS+1 등분 후, 각 구간 내 랜덤 위치 선택
+    const segH = (BOT - TOP) / (NUM_ROWS + 1)
+    const yPositions = Array.from({ length: NUM_ROWS }, (_, i) => {
+      const base = TOP + (i + 1) * segH
+      // 각 구간의 ±35% 범위 내 랜덤
+      const jitter = segH * (0.15 + Math.random() * 0.7 - 0.35)
+      return Math.round(base + jitter)
+    })
+
+    // 2) 가로줄 생성: connectedLines로 Y자 교차 완전 방지
+    const rungs = []
+    for (let row = 0; row < NUM_ROWS; row++) {
+      const connectedLines = new Set() // 이 row에서 이미 연결된 세로줄
+      const gaps = Array.from({ length: n - 1 }, (_, i) => i)
+        .sort(() => Math.random() - 0.5)
+
+      for (const gap of gaps) {
+        // gap은 세로줄 gap과 gap+1을 연결
+        // 두 세로줄 모두 아직 이 row에서 연결 안 됐을 때만 추가
+        if (!connectedLines.has(gap) && !connectedLines.has(gap + 1) && Math.random() > 0.38) {
+          rungs.push({ row, col: gap })
+          connectedLines.add(gap)
+          connectedLines.add(gap + 1)
+        }
+      }
+    }
+    return { rungs, yPositions }
+  }, [])
+
+  // ── 경로 추적 ─────────────────────────────────────────────────────────────
+  const tracePath = useCallback((topIdx, rungs) => {
+    let col = topIdx
+    const path = [{ row: -1, col }]
+    for (let row = 0; row < NUM_ROWS; row++) {
+      const goRight = rungs.find(r => r.row === row && r.col === col)
+      const goLeft  = rungs.find(r => r.row === row && r.col === col - 1)
+      if      (goRight) col += 1
+      else if (goLeft)  col -= 1
+      path.push({ row, col })
+    }
+    return { bottomIdx: col, path }
+  }, [])
+
+  // ── 캔버스 그리기 ─────────────────────────────────────────────────────────
+  const draw = useCallback((highlightPath = null) => {
+    const canvas = canvasRef.current
+    if (!canvas || items.length < 2 || ladder.yPositions.length === 0) return
+    const ctx  = canvas.getContext('2d')
+    const W    = canvas.width
+    const H    = canvas.height
+    const n    = items.length
+    const PAD  = 36
+    const TOP  = 52
+    const BOT  = H - 52
+    const step = (W - PAD * 2) / (n - 1)
+
+    ctx.clearRect(0, 0, W, H)
+
+    const xOf = (col) => PAD + col * step
+    const yOf = (row) => ladder.yPositions[row] ?? (TOP + (row + 1) * (BOT - TOP) / (NUM_ROWS + 1))
+
+    // 세로줄
+    for (let i = 0; i < n; i++) {
+      ctx.beginPath()
+      ctx.moveTo(xOf(i), TOP)
+      ctx.lineTo(xOf(i), BOT)
+      ctx.strokeStyle = '#D1C4BE'
+      ctx.lineWidth   = 3
+      ctx.stroke()
+    }
+
+    // 가로줄
+    ladder.rungs.forEach(({ row, col }) => {
+      ctx.beginPath()
+      ctx.moveTo(xOf(col),     yOf(row))
+      ctx.lineTo(xOf(col + 1), yOf(row))
+      ctx.strokeStyle = '#A09090'
+      ctx.lineWidth   = 3
+      ctx.stroke()
+    })
+
+    // 하이라이트 경로
+    if (highlightPath && highlightPath.length >= 2) {
+      const color = COLORS[highlightPath[0].col % COLORS.length]
+      ctx.strokeStyle = color
+      ctx.lineWidth   = 5
+      ctx.lineCap     = 'round'
+      ctx.lineJoin    = 'round'
+      ctx.beginPath()
+      ctx.moveTo(xOf(highlightPath[0].col), TOP)
+      for (let i = 1; i < highlightPath.length; i++) {
+        const prev = highlightPath[i - 1]
+        const cur  = highlightPath[i]
+        const y    = yOf(cur.row)
+        if (prev.col !== cur.col) {
+          ctx.lineTo(xOf(prev.col), y)
+          ctx.lineTo(xOf(cur.col), y)
+        } else {
+          ctx.lineTo(xOf(cur.col), y)
+        }
+      }
+      ctx.lineTo(xOf(highlightPath[highlightPath.length - 1].col), BOT)
+      ctx.stroke()
+    }
+
+    // 상단 번호
+    for (let i = 0; i < n; i++) {
+      const hl = highlightPath && highlightPath[0].col === i
+      ctx.beginPath()
+      ctx.arc(xOf(i), TOP - 14, 14, 0, 2 * Math.PI)
+      ctx.fillStyle = hl ? COLORS[i % COLORS.length] : '#F3E7DD'
+      ctx.fill()
+      ctx.fillStyle = hl ? '#fff' : '#7A5C52'
+      ctx.font      = 'bold 12px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(i + 1, xOf(i), TOP - 10)
+    }
+
+    // 하단 메뉴명
+    for (let i = 0; i < n; i++) {
+      const isRes = highlightPath && highlightPath[highlightPath.length - 1].col === i
+      ctx.fillStyle = isRes ? COLORS[highlightPath[0].col % COLORS.length] : '#5E4A44'
+      ctx.font      = `bold ${isRes ? 12 : 11}px sans-serif`
+      ctx.textAlign = 'center'
+      const label = items[i].length > 5 ? items[i].slice(0, 5) + '…' : items[i]
+      ctx.fillText(label, xOf(i), BOT + 20)
+    }
+  }, [items, ladder])
+
+  useEffect(() => { draw(animPath) }, [draw, animPath])
+
+  // ── 메뉴 추가 ─────────────────────────────────────────────────────────────
+  const addItem = () => {
+    const v = inputVal.trim()
+    if (!v || items.length >= MAX) return
+    const next = [...items, v]
+    setItems(next)
+    setInputVal('')
+    setResult(null)
+    setAnimPath(null)
+    setLadder(buildLadder(next.length, 420))
+  }
+
+  const removeItem = (idx) => {
+    const next = items.filter((_, i) => i !== idx)
+    setItems(next)
+    setResult(null)
+    setAnimPath(null)
+    if (next.length >= 2) setLadder(buildLadder(next.length, 420))
+    else setLadder({ rungs: [], yPositions: [] })
+  }
+
+  // ── 랜덤 메뉴 불러오기 ───────────────────────────────────────────────────
+  const loadRandom = () => {
+    setFetching(true)
+    getRandomMenus(MAX)
+      .then((data) => {
+        const names = data.slice(0, MAX).map(m => m.name)
+        setItems(names)
+        setResult(null)
+        setAnimPath(null)
+        setLadder(buildLadder(names.length, 420))
+      })
+      .catch(() => {})
+      .finally(() => setFetching(false))
+  }
+
+  // ── 사다리 다시 생성 ──────────────────────────────────────────────────────
+  const regenerate = () => {
+    if (items.length < 2) return
+    setResult(null)
+    setAnimPath(null)
+    setLadder(buildLadder(items.length, 420))
+  }
+
+  // ── 번호 클릭 → 경로 추적 ────────────────────────────────────────────────
+  const handlePick = (topIdx) => {
+    if (items.length < 2) return
+    const { bottomIdx, path } = tracePath(topIdx, ladder.rungs)
+    setAnimPath(path)
+    setResult({ topIdx, bottomIdx })
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* 메뉴 입력 영역 */}
+      <div>
+        <div style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
+          메뉴 목록 ({items.length}/{MAX}) — 최소 2개 이상 필요
+        </div>
+
+        {/* 추가된 메뉴 태그 */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10, minHeight: 32 }}>
+          {items.map((item, i) => (
+            <span key={i} style={{
+              background: COLORS[i % COLORS.length], color: '#fff',
+              borderRadius: 20, padding: '4px 12px', fontSize: '.82rem', fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              {i + 1}. {item}
+              <button onClick={() => removeItem(i)}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.8)', cursor: 'pointer', padding: 0, fontSize: '.9rem', lineHeight: 1 }}>
+                ×
+              </button>
+            </span>
+          ))}
+          {items.length === 0 && (
+            <span style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>메뉴를 추가하거나 랜덤으로 불러오세요</span>
+          )}
+        </div>
+
+        {/* 직접 입력 */}
+        {items.length < MAX && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input
+              className="form-control"
+              style={{ flex: 1 }}
+              placeholder="메뉴명 직접 입력 후 Enter"
+              value={inputVal}
+              onChange={(e) => setInputVal(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addItem()}
+            />
+            <button
+              onClick={addItem}
+              style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+              추가
+            </button>
+          </div>
+        )}
+
+        {/* 버튼 */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={loadRandom} disabled={fetching}
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid var(--color-primary)', background: '#FFF5F5', color: 'var(--color-primary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem' }}>
+            {fetching ? '...' : '🎲 랜덤 메뉴'}
+          </button>
+          {items.length >= 2 && (
+            <button onClick={regenerate}
+              style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-secondary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem' }}>
+              🔀 사다리 재생성
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 사다리 캔버스 */}
+      {items.length >= 2 ? (
+        <>
+          <canvas ref={canvasRef} width={540} height={400}
+            style={{ width: '100%', borderRadius: 12, border: '1px solid var(--border-color)', background: '#FFFDF7', cursor: 'pointer' }}
+          />
+
+          {/* 번호 선택 버튼 */}
+          <div>
+            <div style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
+              번호를 선택하면 경로를 확인할 수 있어요
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {items.map((_, i) => (
+                <button key={i} onClick={() => handlePick(i)}
+                  style={{
+                    width: 42, height: 42, borderRadius: '50%', border: 'none',
+                    background: animPath && animPath[0].col === i ? COLORS[i % COLORS.length] : '#F3E7DD',
+                    color: animPath && animPath[0].col === i ? '#fff' : '#7A5C52',
+                    fontWeight: 800, fontSize: '1rem', cursor: 'pointer',
+                    transition: 'all .2s',
+                  }}>
+                  {i + 1}
+                </button>
+              ))}
+              {animPath && (
+                <button onClick={() => { setAnimPath(null); setResult(null) }}
+                  style={{ padding: '0 14px', height: 42, borderRadius: 21, border: '1.5px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-muted)', fontWeight: 700, cursor: 'pointer', fontSize: '.82rem' }}>
+                  초기화
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 결과 */}
+          {result && (
+            <div style={{
+              background: `linear-gradient(135deg, #FFF5F5, #FED7D7)`,
+              border: `2px solid ${COLORS[result.topIdx % COLORS.length]}`,
+              borderRadius: 16, padding: '20px 24px', textAlign: 'center',
+              animation: 'popIn .4s ease',
+            }}>
+              <div style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
+                🎉 {result.topIdx + 1}번 선택 결과
+              </div>
+              <div style={{ fontSize: '2rem', marginBottom: 6 }}>🍽️</div>
+              <div style={{ fontWeight: 900, fontSize: '1.4rem', color: COLORS[result.topIdx % COLORS.length] }}>
+                {items[result.bottomIdx]}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', background: 'var(--bg-surface)', borderRadius: 12 }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🪜</div>
+          <div style={{ fontWeight: 700 }}>메뉴를 2개 이상 추가하면 사다리가 나타나요</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 메인 Game 페이지
+// ══════════════════════════════════════════════════════════════════════════════
+const TABS = [
+  { id: 'roulette',  label: '🎰 룰렛',    desc: '30개 메뉴 중 랜덤' },
+  { id: 'twentyq',  label: '🕵️ 스무고개', desc: '예/아니오로 맞추기' },
+  { id: 'worldcup', label: '🏆 월드컵',   desc: '32개 토너먼트' },
+  { id: 'scratch',  label: '🎟️ 뽑기',    desc: '긁어서 메뉴 확인' },
+  { id: 'ladder',   label: '🪜 사다리',   desc: '사다리타기' },
+]
+
+export default function Game() {
   const [activeTab, setActiveTab] = useState('roulette')
-  const [menus, setMenus] = useState([])
+  const [menus,     setMenus]     = useState([])
+  const [loading,   setLoading]   = useState(true)
 
   useEffect(() => {
     getRandomMenus(50)
       .then(setMenus)
-      .catch(() => setMenus([]))
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   return (
-    <div style={{ maxWidth: 600, margin: '20px auto', padding: '0 16px' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: 20, fontWeight: 900 }}>🎯 결정장애 극복 게임천국</h2>
-      
-      {/* 탭 네비게이션 */}
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 24, paddingBottom: 6 }}>
-        {[
-          { id: 'roulette', label: '🎰 룰렛' },
-          { id: 'twenty', label: '🕵️ 스무고개' },
-          { id: 'worldcup', label: '🏆 월드컵' },
-          { id: 'scratch', label: '🎟️ 복권' },
-          { id: 'ladder', label: '🪜 사다리' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+    <div className="game-wrap" style={{ maxWidth: 640 }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" style={{ height: 38, width: 38, objectFit: 'contain' }}
+          onError={(e) => { e.target.style.display = 'none' }} />
+        🎮 게임창
+      </h1>
+      <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', marginBottom: 24 }}>
+        게임으로 오늘 메뉴를 정해보세요!
+      </p>
+
+      {/* 탭 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 24 }}>
+        {TABS.map(({ id, label, desc }) => (
+          <button key={id} onClick={() => setActiveTab(id)}
             style={{
               padding: '8px 16px', borderRadius: 20, border: 'none',
               background: activeTab === tab.id ? 'var(--color-primary)' : 'var(--bg-surface)',
@@ -614,13 +987,21 @@ function Game() {
         ))}
       </div>
 
-      {/* 선택된 게임 컴포넌트 렌더링 */}
-      <div style={{ background: 'var(--bg-white)', borderRadius: 24, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-        {activeTab === 'roulette' && <Roulette />}
-        {activeTab === 'twenty' && <TwentyQ menus={menus} />}
-        {activeTab === 'worldcup' && <WorldCup menus={menus} />}
-        {activeTab === 'scratch' && <ScratchCard menus={menus} />}
-        {activeTab === 'ladder' && <Ladder menus={menus} />}
+      {/* 게임 카드 */}
+      <div className="game-card" style={{ minHeight: 420 }}>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 360, color: 'var(--text-muted)', gap: 8 }}>
+            <span>🍽️</span> 메뉴 불러오는 중...
+          </div>
+        ) : (
+          <>
+            {activeTab === 'roulette'  && <Roulette />}
+            {activeTab === 'twentyq'   && <TwentyQ     menus={menus} />}
+            {activeTab === 'worldcup'  && <WorldCup    menus={menus} />}
+            {activeTab === 'scratch'   && <ScratchCard menus={menus} />}
+            {activeTab === 'ladder'    && <Ladder       menus={menus} />}
+          </>
+        )}
       </div>
     </div>
   )
