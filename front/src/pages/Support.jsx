@@ -160,6 +160,7 @@ export default function Support() {
       } catch (error) {
         console.error("오류 발생:", error);
       }
+    };
     
 
     // 🔍 [필터링 및 페이징] 실시간 내부 검색 반영
@@ -509,5 +510,4 @@ export default function Support() {
       </div>
     );
   }
-
 
