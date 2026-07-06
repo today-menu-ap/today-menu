@@ -157,7 +157,7 @@ def index():
         'categories':   CATEGORIES,
     })
 
-@main_bp.route('/api/menu/trending', methods=['GET'])
+@main_bp.route('/trending', methods=['GET'])
 def get_trending_data():
     from sqlalchemy import func as sa_func
 
