@@ -13,7 +13,7 @@ const adBannerImageClass =
   'h-full w-full object-contain object-center'
 
 const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥡', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 카페: '☕' }
-const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
+const TREND_FOODS = ['한식', '치킨', '중식', '일식', '양식', '분식', '카페', '술집']
 
 const SAMPLE_RESTAURANTS = [
   {
@@ -167,6 +167,16 @@ useEffect(() => {
   }).catch((err) => {
     console.error('trending 로드 실패:', err);
     setTrending(SAMPLE_RESTAURANTS);
+    // 실패 시 SAMPLE 기반 카운팅
+    const fallbackMap = {}
+    SAMPLE_RESTAURANTS.forEach(r => {
+      if (r.category) fallbackMap[r.category] = (fallbackMap[r.category] || 0) + 1
+    })
+    const fallbackSorted = Object.entries(fallbackMap)
+      .sort((a, b) => b[1] - a[1] || Math.random() - 0.5)
+      .slice(0, 8)
+      .map(([name, count]) => ({ name, count }))
+    setTrendKeywords(fallbackSorted)
   });
 }, [user]);
 
