@@ -266,11 +266,7 @@ export default function PartyDetail() {
     await handleJoin();
   };
 
-  const dummyReviews = [
-    { nick: '김철수', score: 5, text: '분위기 좋고 음식도 맛있었어요! 다음에 또 참여하고 싶습니다.' },
-    { nick: '이영희', score: 4, text: '밥친구들이 다 친절했어요. 메뉴 선택도 좋았습니다.' },
-    { nick: '박민준', score: 5, text: '처음 참여했는데 부담 없이 즐길 수 있었어요.' },
-  ]
+
 
   const tabs = [
     { key: 'info', label: '파티 정보' },
@@ -535,20 +531,25 @@ export default function PartyDetail() {
                     <span className="text-2xl">⭐</span>
                     리뷰
                   </h3>
-                  <span className="text-[0.82rem] text-[var(--text-muted)]">총 {dummyReviews.length}개</span>
+                  <span className="text-[0.82rem] text-[var(--text-muted)]">총 {reviews.length}개</span>
                 </div>
-                {dummyReviews.map((rev, i) => (
-                  <div key={i} className="party-review-card">
-                    <div className="party-reviewer-avatar">{rev.nick[0]}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                        <span style={{ fontWeight: 700, fontSize: '.88rem' }}>{rev.nick}</span>
-                        <span style={{ color: 'var(--color-accent)', fontSize: '.82rem' }}>{'★'.repeat(rev.score)}</span>
+                {reviews.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '.9rem', textAlign: 'center', padding: '16px 0' }}>아직 리뷰가 없습니다</p>
+                ) : (
+                  reviews.map((rev, i) => (
+                    <div key={rev.review_id || i} className="party-review-card">
+                      <div className="party-reviewer-avatar">{(rev.nickname || '?')[0]}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontWeight: 700, fontSize: '.88rem' }}>{rev.nickname || '익명'}</span>
+                          <span style={{ color: 'var(--color-accent)', fontSize: '.82rem' }}>{'★'.repeat(Math.round(rev.rating || 0))}</span>
+                        </div>
+                        <p style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{rev.content}</p>
+                        <span style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{rev.created_at}</span>
                       </div>
-                      <p style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{rev.text}</p>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               
               </div>
             )}
