@@ -1226,7 +1226,7 @@ def chatbot():
 
     from sqlalchemy import text as _t_chat
     _chat_rows = db.session.execute(_t_chat(
-        "SELECT name, category FROM restaurants ORDER BY avg_rating DESC LIMIT 30"
+        "SELECT name, category FROM restaurants ORDER BY avg_rating DESC LIMIT 200"
     )).fetchall()
     all_rests = [f"{row[0]}({row[1]})" for row in _chat_rows]
     all_rests_str = ', '.join(all_rests) or '등록된 식당 없음'
@@ -1886,50 +1886,36 @@ def manner_history():
     received = MannerVote.query.filter_by(target_id=user_id).order_by(MannerVote.voted_at.desc()).limit(20).all()
     given    = MannerVote.query.filter_by(voter_id=user_id).order_by(MannerVote.voted_at.desc()).limit(10).all()
     user     = User.query.get(user_id)
+
+    total_received = len(received)
+    positive_count = sum(1 for v in received if v.is_positive)
+    negative_count = total_received - positive_count
+
     return jsonify({
         'manner_score': user.manner_score,
-        'received': [{'voter': v.voter.nickname if v.voter else '알 수 없음', 'is_positive': v.is_positive, 'delta': +1.0 if v.is_positive else -1.0, 'voted_at': v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else ''} for v in received],
-        'given':    [{'target': v.target.nickname if v.target else '알 수 없음', 'is_positive': v.is_positive, 'voted_at': v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else ''} for v in given],
-        'stats':    {'total_received': MannerVote.query.filter_by(target_id=user_id).count(), 'positive': MannerVote.query.filter_by(target_id=user_id, is_positive=True).count(), 'negative': MannerVote.query.filter_by(target_id=user_id, is_positive=False).count()},
-    }), 200
-
-# ── 매너온도 투표 API ────────────────────────────────────────────────────────
-@api_bp.route('/manner/vote/<int:target_id>', methods=['POST'])
-@jwt_login_required
-def vote_manner(target_id):
-    from datetime import date
-    voter_id = int(get_jwt_identity())
-    if voter_id == target_id:
-        return jsonify({'message': '자신에게 투표할 수 없습니다.'}), 400
-    target = User.query.get_or_404(target_id)
-    body   = request.get_json(force=True)
-    is_pos = bool(body.get('is_positive', True))
-    today  = date.today()
-    today_count = MannerVote.query.filter(
-        MannerVote.voter_id == voter_id,
-        db.func.date(MannerVote.voted_at) == today,
-    ).count()
-    if today_count >= 2:
-        return jsonify({'message': '오늘 투표 횟수(2회)를 모두 사용했습니다.'}), 429
-    already = MannerVote.query.filter(
-        MannerVote.voter_id  == voter_id,
-        MannerVote.target_id == target_id,
-        db.func.date(MannerVote.voted_at) == today,
-    ).first()
-    if already:
-        return jsonify({'message': '오늘 이미 이 회원에게 투표했습니다.'}), 409
-    vote = MannerVote(voter_id=voter_id, target_id=target_id, is_positive=is_pos)
-    db.session.add(vote)
-    delta = 1.0 if is_pos else -1.0
-    target.manner_score = round(max(20.0, min(50.0, target.manner_score + delta)), 1)
-    db.session.commit()
-    remaining = 2 - (today_count + 1)
-    return jsonify({
-        'message':     f"{'따뜻한' if is_pos else '차가운'} 한 표! {target.nickname}님 온도 {'+' if is_pos else ''}{delta}°",
-        'new_score':   target.manner_score,
-        'remaining':   remaining,
-        'is_positive': is_pos,
-    }), 200
+        'stats': {
+            'total_received': total_received,
+            'positive':       positive_count,
+            'negative':       negative_count,
+        },
+        'received': [
+            {
+                'voter':       v.voter.nickname if v.voter else '알 수 없음',
+                'is_positive': v.is_positive,
+                'delta':       1.0 if v.is_positive else -1.0,
+                'voted_at':    v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else '',
+            }
+            for v in received
+        ],
+        'given': [
+            {
+                'target':      v.target.nickname if v.target else '알 수 없음',
+                'is_positive': v.is_positive,
+                'voted_at':    v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else '',
+            }
+            for v in given
+        ],
+    })
 
 
 @api_bp.route('/manner/status', methods=['GET'])
