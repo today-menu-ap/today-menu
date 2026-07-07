@@ -168,7 +168,7 @@ export default function MyPage() {
     </div>
   )
 
-  const { user = {}, my_parties = [], rec_logs = [], liked_logs: apiLikedLogs = [] } = data || {};
+  const { user = {}, my_parties = [], rec_logs = [], liked_logs: apiLikedLogs = [], my_reviews = [] } = data || {};
 
   const likes = processTags(user.preferences?.likes);
   const dislikes = processTags(user.preferences?.dislikes);
@@ -539,6 +539,29 @@ export default function MyPage() {
             💬 고객문의
           </Link>
         </div>
+      </div>
+
+      {/* ── 내가 쓴 리뷰 ── */}
+      <div className="profile-section">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h3>⭐ 내가 쓴 리뷰</h3>
+        </div>
+        {my_reviews.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)', fontSize: '.9rem', textAlign: 'center', padding: '16px 0' }}>아직 작성한 리뷰가 없습니다</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {my_reviews.map((rv) => (
+              <div key={rv.review_id || rv.id} style={{ background: 'var(--bg-white)', borderRadius: 10, padding: '12px 16px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ fontWeight: 700, fontSize: '.95rem' }}>{rv.restaurant_name || rv.restaurant?.name || '식당'}</span>
+                  <span style={{ color: '#F6AD55', fontWeight: 700 }}>{'★'.repeat(rv.rating)}{'☆'.repeat(5 - rv.rating)}</span>
+                </div>
+                <p style={{ fontSize: '.88rem', color: 'var(--text-muted)', margin: '0 0 4px' }}>{rv.content}</p>
+                <span style={{ fontSize: '.78rem', color: 'var(--text-light)' }}>{rv.created_at?.slice(0, 10)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── 저장 장소 ── */}
