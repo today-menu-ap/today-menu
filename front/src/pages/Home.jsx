@@ -13,7 +13,7 @@ const adBannerImageClass =
   'h-full w-full object-contain object-center'
 
 const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥡', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 카페: '☕' }
-const TREND_FOODS = ['한식', '치킨', '중식', '일식', '양식', '분식', '카페', '술집']
+const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
 
 const SAMPLE_RESTAURANTS = [
   {
@@ -128,7 +128,13 @@ export default function Home() {
   const [userLoc, setUserLoc] = useState(null)
   const [locStatus, setLocStatus] = useState('idle')
   const [bannerIdx, setBannerIdx] = useState(0)
-  const [trendKeywords, setTrendKeywords] = useState(TREND_FOODS.map(f => ({ name: f, count: 0 })))
+  const [trendKeywords, setTrendKeywords] = useState(() => {
+    try {
+      const saved = localStorage.getItem('trendKeywords')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return TREND_FOODS.map(f => ({ name: f, count: 0 }))
+  })
   const [showSearch, setShowSearch] = useState(false)
   const [likedCafeteriaIds, setLikedCafeteriaIds] = useState(() => new Set())
   const bannerTimer = useRef(null)
@@ -163,20 +169,11 @@ useEffect(() => {
         .slice(0, 8)
         .map(([name, count]) => ({ name, count }))
       setTrendKeywords(sorted)
+      try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch {}
     }
   }).catch((err) => {
     console.error('trending 로드 실패:', err);
     setTrending(SAMPLE_RESTAURANTS);
-    // 실패 시 SAMPLE 기반 카운팅
-    const fallbackMap = {}
-    SAMPLE_RESTAURANTS.forEach(r => {
-      if (r.category) fallbackMap[r.category] = (fallbackMap[r.category] || 0) + 1
-    })
-    const fallbackSorted = Object.entries(fallbackMap)
-      .sort((a, b) => b[1] - a[1] || Math.random() - 0.5)
-      .slice(0, 8)
-      .map(([name, count]) => ({ name, count }))
-    setTrendKeywords(fallbackSorted)
   });
 }, [user]);
 
@@ -206,7 +203,9 @@ useEffect(() => {
   const handleKeywordClick = (keyword) => {
     setTrendKeywords(prev => {
       const updated = prev.map(k => k.name === keyword ? { ...k, count: k.count + 1 } : k)
-      return [...updated].sort((a, b) => b.count - a.count || Math.random() - 0.5)
+      const sorted = [...updated].sort((a, b) => b.count - a.count || Math.random() - 0.5)
+      try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch {}
+      return sorted
     })
   }
 
