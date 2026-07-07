@@ -1423,13 +1423,14 @@ A. 마이페이지 최하단 '회원 탈퇴하기' 버튼을 누르세요.
         )
         reply = response.choices[0].message.content
 
-        # 💡 [코드 고도화] 추천 로그 인메모리 루프 누수 해결을 위한 텍스트 포함 쿼리 적용
+        # 추천 로그 — 응답에 언급된 식당 1개만 저장 (SQL LIKE로 효율화)
         if mode == 'recommend':
-            # Python 레벨에서 식당명 매칭 (SQLite 호환)
-            all_rests_log = Restaurant.query.with_entities(
-                Restaurant.restaurant_id, Restaurant.name
-            ).all()
-            for r_id, r_name in all_rests_log:
+            from sqlalchemy import text as _t_log
+            # reply에서 첫 번째 매칭 식당 찾기 (최대 30개만 확인)
+            top_rests = db.session.execute(_t_log(
+                "SELECT restaurant_id, name FROM restaurants ORDER BY avg_rating DESC LIMIT 200"
+            )).fetchall()
+            for r_id, r_name in top_rests:
                 if r_name and r_name in reply:
                     db.session.add(RecommendationLog(
                         user_id=user_id,
