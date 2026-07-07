@@ -210,7 +210,7 @@ function RestaurantManager() {
   const [page,     setPage]     = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const PER_PAGE = 15
-  const [form,    setForm]    = useState({ name: '', address: '', category: '한식', phone: '', latitude: '', longitude: '' })
+  const [form,    setForm]    = useState({ name: '', address: '', category: '한식', phone: '', latitude: '', longitude: '', business_hours: '' })
   const [showForm, setShowForm] = useState(false)
   const CATS = ['전체','한식','중식','일식','양식','분식','치킨','피자','카페','술집']
 
@@ -234,7 +234,7 @@ function RestaurantManager() {
         latitude:  form.latitude  ? parseFloat(form.latitude)  : null,
         longitude: form.longitude ? parseFloat(form.longitude) : null,
       })
-      setForm({ name: '', address: '', category: '한식', phone: '', latitude: '', longitude: '' })
+      setForm({ name: '', address: '', category: '한식', phone: '', latitude: '', longitude: '', business_hours: '' })
       setShowForm(false)
       await load()
       alert('식당이 등록되었습니다.')
@@ -293,6 +293,10 @@ function RestaurantManager() {
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">전화번호</label>
             <input className="form-control" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">영업시간</label>
+            <input className="form-control" placeholder="예: 09:00~22:00" value={form.business_hours} onChange={e => setForm({...form, business_hours: e.target.value})} />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">위도</label>
