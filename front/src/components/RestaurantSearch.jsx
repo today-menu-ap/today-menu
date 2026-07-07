@@ -28,22 +28,17 @@ export default function RestaurantSearch({ userLoc, onRegister }) {
     setMessage('')
 
     // 실시간 인기 검색어 카운팅
-    const keyword = query.trim()
-    if (keyword) {
-      try {
-        const saved = localStorage.getItem('trendKeywords')
-        const keywords = saved ? JSON.parse(saved) : []
-        const exists = keywords.find(k => k.name === keyword)
-        let updated
-        if (exists) {
-          updated = keywords.map(k => k.name === keyword ? { ...k, count: k.count + 1 } : k)
-        } else {
-          updated = [...keywords, { name: keyword, count: 1 }]
-        }
-        const sorted = updated.sort((a, b) => b.count - a.count || Math.random() - 0.5).slice(0, 8)
-        localStorage.setItem('trendKeywords', JSON.stringify(sorted))
-      } catch {}
-    }
+    try {
+      const kw = query.trim()
+      const saved = localStorage.getItem('trendKeywords')
+      const keywords = saved ? JSON.parse(saved) : []
+      const exists = keywords.find(k => k.name === kw)
+      const updated = exists
+        ? keywords.map(k => k.name === kw ? { ...k, count: k.count + 1 } : k)
+        : [...keywords, { name: kw, count: 1 }]
+      const sorted = updated.sort((a, b) => b.count - a.count || Math.random() - 0.5).slice(0, 8)
+      localStorage.setItem('trendKeywords', JSON.stringify(sorted))
+    } catch {}
 
     try {
       const cleanQuery = query.split('&')[0]  // ✅ 이 줄 추가
