@@ -1917,6 +1917,55 @@ def _update_avg_rating(restaurant_id):
         db.session.commit()
 
 # ── MANNER HISTORY API ────────────────────────────────────────────────────────
+@api_bp.route('/manner/vote/<int:target_user_id>', methods=['POST'])
+@jwt_login_required
+def vote_manner(target_user_id):
+    """매너온도 투표 (하루 2회 제한)"""
+    voter_id = int(get_jwt_identity())
+
+    if voter_id == target_user_id:
+        return jsonify({'message': '자신에게 투표할 수 없습니다.'}), 400
+
+    target = User.query.get_or_404(target_user_id)
+    data = request.get_json()
+    is_positive = data.get('is_positive', True)
+
+    # 하루 2회 제한 체크
+    from datetime import datetime, date
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    today_votes = MannerVote.query.filter(
+        MannerVote.voter_id == voter_id,
+        MannerVote.voted_at >= today_start
+    ).count()
+
+    if today_votes >= 2:
+        return jsonify({'message': '오늘 투표 횟수(2회)를 모두 사용했습니다.', 'remaining': 0}), 400
+
+    # 같은 대상 하루 1회 제한
+    already = MannerVote.query.filter(
+        MannerVote.voter_id == voter_id,
+        MannerVote.target_id == target_user_id,
+        MannerVote.voted_at >= today_start
+    ).first()
+    if already:
+        return jsonify({'message': '이미 이 유저에게 오늘 투표했습니다.', 'remaining': 2 - today_votes}), 400
+
+    # 투표 저장
+    vote = MannerVote(voter_id=voter_id, target_id=target_user_id, is_positive=is_positive)
+    db.session.add(vote)
+
+    # 온도 변경 (±1.0, 범위 20~50)
+    delta = 1.0 if is_positive else -1.0
+    target.manner_score = round(max(20.0, min(50.0, (target.manner_score or 36.5) + delta)), 1)
+    db.session.commit()
+
+    remaining = max(0, 1 - (today_votes))  # 이번 투표 포함하면 remaining-1
+    return jsonify({
+        'message': f'매너온도 {"+" if is_positive else ""}{delta}°C 반영되었습니다.',
+        'manner_score': target.manner_score,
+        'remaining': remaining,
+    }), 200
+
 @api_bp.route('/manner/history', methods=['GET'])
 @jwt_login_required
 def manner_history():
