@@ -1,40 +1,108 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../App'
 import { getRandomMenus } from '../api/services'
 
-// ── 카테고리 아이콘 ──────────────────────────────────────────────────────────
-const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 카페:'☕', 술집:'🍺' }
-const catIcon = (c) => CAT_ICON[c] ?? '🍴'
+// ── 카테고리 아이콘 (룰렛 시각용 & 결과 출력용 통일) ───────────────────────────
+const CAT_ICON = {
+  한식: '🍚', 일식: '🍣', 중식: '🥟', 양식: '🥩',
+  분식: '🍜', 치킨: '🍗', 카페: '☕'
+}
 
+const catIcon = (categoryName) => {
+  if (categoryName === '피자') return CAT_ICON['양식'];
+  return CAT_ICON[categoryName] ?? '🍴';
+}
+
+// 카테고리 선택 목록
 const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페']
+
+
+// ── 💡 [공통 추가] 모든 확장자(.jpg, .png, .webp) 대응 만능 이미지 컴포넌트 ──
+// 파일 최상단에 두었기 때문에 Roulette, WorldCup 등 파일 내 모든 곳에서 공유 가능합니다.
+const MenuImage = ({ item, size = '100%' }) => {
+  const extensions = ['jpg', 'png', 'webp', 'jpeg'];
+  const [extIndex, setExtIndex] = useState(0);
+  const [imgSrc, setImgSrc] = useState(`/img/menus/${item.id}.${extensions[0]}`);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    setExtIndex(0);
+    setImgSrc(`/img/menus/${item.id}.${extensions[0]}`);
+    setIsError(false);
+  }, [item.id]);
+
+  const handleError = () => {
+    const nextIndex = extIndex + 1;
+    if (nextIndex < extensions.length) {
+      setExtIndex(nextIndex);
+      setImgSrc(`/img/menus/${item.id}.${extensions[nextIndex]}`);
+    } else {
+      setIsError(true);
+    }
+  };
+
+  return (
+    <div style={{ 
+      width: size, 
+      height: '160px', // 💡 [핵심] 이미지 상자의 세로 높이를 160px로 절대 고정!
+      margin: '0 auto', 
+      background: '#f8fafc',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderBottom: '1px solid var(--border-color)' // 글자 구분을 위한 하단 선 추가
+    }}>
+      {!isError ? (
+        <img 
+          src={imgSrc} 
+          alt={item.name} 
+          // 💡 height: '100%'와 objectFit: 'cover' 덕분에 사진이 찌그러지지 않고 고정된 160px 안에 이쁘게 꽉 찹니다.
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={handleError} 
+        />
+      ) : (
+        // 사진이 없을 때 뜨는 이모지 영역도 높이 균형을 맞춰줍니다.
+        <span style={{ fontSize: '3rem' }}>
+          {catIcon(item.category)}
+        </span>
+      )}
+    </div>
+  );
+};
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 게임 1 — 룰렛
 // ══════════════════════════════════════════════════════════════════════════════
 function Roulette() {
-  const canvasRef  = useRef(null)
-  const spinning   = useRef(false)
-  const angleRef   = useRef(0)
-  const [result,     setResult]     = useState(null)
-  const [isSpinning, setIsSpinning] = useState(false)
-  const [category,   setCategory]   = useState('전체')
-  const [items,      setItems]      = useState([])
-  const [fetching,   setFetching]   = useState(false)
+  const navigate = useNavigate() 
+  const canvasRef = useRef(null)
+  const spinning = useRef(false)
+  const angleRef = useRef(0)
 
-  // 카테고리 바뀔 때마다 API에서 해당 카테고리 메뉴 새로 불러오기
+  const [result, setResult] = useState(null)
+  const [isSpinning, setIsSpinning] = useState(false)
+  const [category, setCategory] = useState('전체')
+  const [items, setItems] = useState([])
+  const [fetching, setFetching] = useState(false)
+
+  // 1️⃣ 카테고리 바뀔 때마다 API에서 메뉴 새로 불러오기
   useEffect(() => {
     setFetching(true)
-    setResult(null)
+    setResult(null) 
     angleRef.current = 0
     getRandomMenus(30, category)
-      .then(setItems)
-      .catch(() => setItems([]))
+      .then(data => {
+        setItems(data)
+      })
+      .catch(() => setItems([])) 
       .finally(() => setFetching(false))
   }, [category])
 
   const slice = (2 * Math.PI) / (items.length || 1)
-  const COLORS = ['#E53E3E','#DD6B20','var(--color-accent)','#38A169','#3182CE','#6B46C1','#D53F8C']
+  const COLORS = ['#E53E3E', '#DD6B20', 'var(--color-accent)', '#38A169', '#3182CE', '#6B46C1', '#D53F8C']
 
   const draw = useCallback((angle) => {
     const canvas = canvasRef.current
@@ -42,12 +110,12 @@ function Roulette() {
     const ctx = canvas.getContext('2d')
     const cx = canvas.width / 2
     const cy = canvas.height / 2
-    const r  = cx - 8
+    const r = cx - 8
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     items.forEach((item, i) => {
       const start = angle + i * slice
-      const end   = start + slice
+      const end = start + slice
 
       ctx.beginPath()
       ctx.moveTo(cx, cy)
@@ -66,13 +134,12 @@ function Roulette() {
       ctx.fillStyle = '#fff'
       ctx.font = `bold ${Math.max(9, 13 - items.length * .1)}px sans-serif`
       ctx.shadowColor = 'rgba(0,0,0,.4)'
-      ctx.shadowBlur  = 2
+      ctx.shadowBlur = 2
       const name = item.name.length > 7 ? item.name.slice(0, 7) + '…' : item.name
       ctx.fillText(name, r - 8, 4)
       ctx.restore()
     })
 
-    // 중앙 원
     ctx.beginPath()
     ctx.arc(cx, cy, 22, 0, 2 * Math.PI)
     ctx.fillStyle = '#fff'
@@ -86,7 +153,6 @@ function Roulette() {
     ctx.fillText('SPIN', cx, cy + 4)
   }, [items, slice])
 
-  // 카테고리 바뀌면 룰렛 다시 그리기 + 결과 초기화
   useEffect(() => {
     angleRef.current = 0
     setResult(null)
@@ -99,17 +165,17 @@ function Roulette() {
     setIsSpinning(true)
     setResult(null)
 
-    const extraSpins  = (5 + Math.random() * 5) * 2 * Math.PI
+    const extraSpins = (5 + Math.random() * 5) * 2 * Math.PI
     const targetAngle = angleRef.current + extraSpins
-    const duration    = 4000
-    const start       = performance.now()
-    const startAngle  = angleRef.current
+    const duration = 4000
+    const start = performance.now()
+    const startAngle = angleRef.current
 
     const animate = (now) => {
       const elapsed = now - start
       const t = Math.min(elapsed / duration, 1)
-      const ease = 1 - Math.pow(1 - t, 3)
-      const cur  = startAngle + (targetAngle - startAngle) * ease
+      const ease = 1 - Math.pow(1 - t, 3) 
+      const cur = startAngle + (targetAngle - startAngle) * ease
 
       angleRef.current = cur
       draw(cur)
@@ -120,36 +186,35 @@ function Roulette() {
         spinning.current = false
         setIsSpinning(false)
         const norm = (((-cur % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI))
-        const idx  = Math.floor(norm / slice) % items.length
+        const idx = Math.floor(norm / slice) % items.length
         setResult(items[idx])
       }
     }
     requestAnimationFrame(animate)
   }
 
+  const goToCategoryPage = () => {
+    if (result) {
+      const targetCategory = result.category === '피자' ? '양식' : result.category;
+      navigate(`/menu?cat=${targetCategory}`);
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-
-      {/* 카테고리 필터 - 룰렛 왼쪽 위 */}
       <div style={{ alignSelf: 'flex-start' }}>
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           style={{
-            padding: '6px 12px',
-            borderRadius: 8,
-            border: '1.5px solid var(--border-color)',
-            fontSize: '.88rem',
-            fontWeight: 700,
-            background: 'var(--bg-white)',
-            color: 'var(--text-primary)',
-            cursor: 'pointer',
-            outline: 'none',
+            padding: '6px 12px', borderRadius: 8, border: '1.5px solid var(--border-color)',
+            fontSize: '.88rem', fontWeight: 700, background: 'var(--bg-white)',
+            color: 'var(--text-primary)', cursor: 'pointer', outline: 'none',
           }}
         >
           {CATEGORIES.map(cat => (
             <option key={cat} value={cat}>
-              {cat === '전체' ? '전체' : `${CAT_ICON[cat] ?? ''} ${cat}`}
+              {cat === '전체' ? '전체' : `${catIcon(cat)} ${cat}`}
             </option>
           ))}
         </select>
@@ -160,7 +225,6 @@ function Roulette() {
         )}
       </div>
 
-      {/* 룰렛 캔버스 */}
       {fetching ? (
         <div style={{ padding: 40, color: 'var(--text-muted)', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}>🍽️</div>
@@ -170,21 +234,14 @@ function Roulette() {
         <div style={{ padding: 40, color: 'var(--text-muted)', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}>😅</div>
           <div style={{ fontWeight: 700 }}>{category} 메뉴가 없습니다</div>
-          <div style={{ fontSize: '.82rem', marginTop: 4 }}>다른 카테고리를 선택해주세요</div>
         </div>
       ) : (
         <>
           <div style={{ position: 'relative' }}>
-            {/* 화살표 */}
             <div style={{
-              position: 'absolute', top: '50%', right: -10,
-              transform: 'translateY(-50%)',
-              width: 0, height: 0,
-              borderTop: '10px solid transparent',
-              borderBottom: '10px solid transparent',
-              borderRight: '20px solid #E53E3E',
-              zIndex: 10,
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,.3))',
+              position: 'absolute', top: '50%', right: -10, transform: 'translateY(-50%)',
+              width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent',
+              borderRight: '20px solid #E53E3E', zIndex: 10, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,.3))',
             }} />
             <canvas ref={canvasRef} width={300} height={300}
               style={{ borderRadius: '50%', boxShadow: '0 4px 20px rgba(0,0,0,.15)', cursor: isSpinning ? 'default' : 'pointer' }}
@@ -192,46 +249,48 @@ function Roulette() {
             />
           </div>
 
-          <button
-            onClick={spin}
-            disabled={isSpinning}
+          <button onClick={spin} disabled={isSpinning}
             style={{
               padding: '12px 40px', borderRadius: 50,
               background: isSpinning ? 'var(--bg-surface)' : 'var(--color-primary)',
               color: isSpinning ? 'var(--text-muted)' : '#fff',
               border: 'none', fontWeight: 800, fontSize: '1rem',
-              cursor: isSpinning ? 'default' : 'pointer',
-              transition: 'all .2s',
+              cursor: isSpinning ? 'default' : 'pointer', transition: 'all .2s',
             }}>
             {isSpinning ? '🌀 돌아가는 중...' : '🎰 룰렛 돌리기!'}
           </button>
 
+          {/* 3️⃣ 당첨 결과 출력 영역 */}
           {result && (
             <div style={{
-              width: '100%',
-              background: 'linear-gradient(135deg,#FFF5F5,#FED7D7)',
-              border: '2px solid var(--color-primary)',
-              borderRadius: 20, padding: '24px 28px', textAlign: 'center',
-              animation: 'popIn .4s ease',
+              width: '100%', background: 'linear-gradient(135deg,#FFF5F5,#FED7D7)',
+              border: '2px solid var(--color-primary)', borderRadius: 20, padding: '24px 28px', textAlign: 'center',
+              boxSizing: 'border-box',
               boxShadow: '0 8px 24px rgba(244,108,111,.2)',
             }}>
-              <div style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--color-primary)', marginBottom: 8, letterSpacing: '.05em' }}>
-                🎉 오늘의 메뉴 당첨!
+              <div style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--color-primary)', marginBottom: 8 }}>🎉 오늘의 메뉴 당첨!</div>
+
+              {/* 💡 [수정] 이모지 영역 대신 다중 확장자를 커버하는 MenuImage 컴포넌트 장착! */}
+              <MenuImage item={result} size="130px" />
+
+              <div style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: 4, color: 'var(--text-primary)' }}>{result.name}</div>
+
+              <div style={{ display: 'inline-block', background: 'rgba(244,108,111,.12)', color: 'var(--color-primary)', borderRadius: 20, padding: '3px 12px', fontSize: '.78rem', fontWeight: 700, marginBottom: 12 }}>
+                {result.category === '피자' ? '양식' : result.category}
               </div>
-              <div style={{ fontSize: '2.8rem', marginBottom: 8 }}>{catIcon(result.category)}</div>
-              <div style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: 4, color: 'var(--text-primary)' }}>
-                {result.name}
-              </div>
-              <div style={{ display: 'inline-block', background: 'rgba(244,108,111,.12)', color: 'var(--color-primary)', borderRadius: 20, padding: '3px 12px', fontSize: '.78rem', fontWeight: 700, marginBottom: 8 }}>
-                {result.category}
-              </div>
-              <div style={{ fontSize: '.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                📍 {result.address}
-              </div>
-              <Link to={`/menu/${result.id}`}
-                style={{ display: 'inline-block', padding: '10px 28px', borderRadius: 50, background: 'var(--color-primary)', color: '#fff', fontSize: '.9rem', fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 12px rgba(244,108,111,.35)' }}>
-                식당 보러가기 →
-              </Link>
+
+              <div style={{ fontSize: '.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>이 카테고리의 모든 메뉴를 확인해 볼까요?</div>
+
+              <button
+                onClick={goToCategoryPage}
+                style={{
+                  display: 'inline-block', padding: '10px 28px', borderRadius: 50,
+                  background: 'var(--color-primary)', color: '#fff',
+                  fontSize: '.9rem', fontWeight: 800, textDecoration: 'none',
+                  border: 'none', cursor: 'pointer', outline: 'none'
+                }}>
+                {result.category === '피자' ? '양식' : result.category} 전체 메뉴 보러가기 →
+              </button>
             </div>
           )}
         </>
@@ -359,20 +418,20 @@ function TwentyQ({ menus }) {
 // ══════════════════════════════════════════════════════════════════════════════
 function WorldCup({ menus }) {
   const POOL = 32
-  const [bracket,  setBracket]  = useState([])
-  const [round,    setRound]    = useState(0)
-  const [winners,  setWinners]  = useState([])
+  const [bracket, setBracket] = useState([])
+  const [round, setRound] = useState(0)
+  const [winners, setWinners] = useState([])
   const [roundNum, setRoundNum] = useState(0)
   const [champion, setChampion] = useState(null)
   const [choosing, setChoosing] = useState(null)
 
   const init = () => {
     const pool = [...menus].sort(() => Math.random() - .5).slice(0, POOL)
-    setBracket(pool); setRound(0); setWinners([]); setRoundNum(1); setChampion(null)
+    setBracket(pool); setRound(0); setWinners([]); setChampion(null)
   }
   useEffect(() => { if (menus.length >= 4) init() }, [menus])
 
-  const left  = bracket[round * 2]
+  const left = bracket[round * 2]
   const right = bracket[round * 2 + 1]
   const totalMatches = bracket.length / 2
   const roundLabel = bracket.length === 2 ? '결승' : bracket.length === 4 ? '준결승' : bracket.length === 8 ? '8강' : bracket.length === 16 ? '16강' : '32강'
@@ -383,12 +442,12 @@ function WorldCup({ menus }) {
     setTimeout(() => {
       setChoosing(null)
       const newWinners = [...winners, winner]
-      const nextRound  = round + 1
+      const nextRound = round + 1
       if (nextRound >= totalMatches) {
         if (newWinners.length === 1) {
           setChampion(newWinners[0])
         } else {
-          setBracket(newWinners); setRound(0); setWinners([]); setRoundNum(r => r + 1)
+          setBracket(newWinners); setRound(0); setWinners([])
         }
       } else {
         setRound(nextRound); setWinners(newWinners)
@@ -398,48 +457,91 @@ function WorldCup({ menus }) {
 
   if (!bracket.length) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>메뉴 불러오는 중...</div>
 
+  // 🏆 챔피언 결과 창
   if (champion) return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: '3rem', marginBottom: 8 }}>🏆</div>
-      <div style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: 4 }}>최종 우승!</div>
-      <div style={{ background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)', border: '3px solid var(--color-accent)', borderRadius: 20, padding: '28px 24px', margin: '16px 0', display: 'inline-block', minWidth: 200 }}>
-        <div style={{ fontSize: '3.5rem', marginBottom: 8 }}>{catIcon(champion.category)}</div>
-        <div style={{ fontWeight: 900, fontSize: '1.5rem' }}>{champion.name}</div>
-        <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{champion.category}</div>
+      <div style={{ 
+        background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)', 
+        border: '3px solid var(--color-accent)', 
+        borderRadius: 20, 
+        overflow: 'hidden', // 라운딩 밖으로 사진 안 나가게 가둠
+        padding: 0, // 패딩 제로화
+        margin: '16px 0', 
+        display: 'inline-block', 
+        width: '200px' // 우승 박스 전체 가로 크기 제한
+      }}>
+        
+        {/* 대결창과 똑같이 깔끔하게 채워집니다 */}
+        <MenuImage item={champion} />
+        
+        <div style={{ fontWeight: 900, fontSize: '1.5rem', padding: '14px 8px 4px' }}>{champion.name}</div>
+        <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', paddingBottom: '16px' }}>
+          {champion.category === '피자' ? '양식' : champion.category}
+        </div>
       </div>
       <div><button className="btn btn-secondary" onClick={init}>🔄 다시하기</button></div>
     </div>
   )
 
+  // ⚔️ 토너먼트 진행 창
   return (
     <div>
       <div style={{ textAlign: 'center', marginBottom: 12 }}>
-        <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>{roundLabel}</span>
-        <span style={{ color: 'var(--text-muted)', fontSize: '.82rem', marginLeft: 8 }}>{round + 1} / {totalMatches} 경기</span>
-      </div>
-      <div style={{ height: 5, background: 'var(--bg-surface)', borderRadius: 4, marginBottom: 20, overflow: 'hidden' }}>
-        <div style={{ height: '100%', background: 'var(--color-primary)', width: `${((round + 1) / totalMatches) * 100}%`, transition: 'width .3s' }} />
+        <span style={{ fontWeight: 800 }}>{roundLabel} ({round + 1}/{totalMatches})</span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'center' }}>
+        
+        {/* 왼쪽 음식 버튼 */}
         {left && (
-          <button onClick={() => pick(left)}
-            style={{ border: `3px solid ${choosing === left.id ? 'var(--color-primary)' : 'var(--border-color)'}`, borderRadius: 16, padding: '20px 12px', cursor: 'pointer', background: choosing === left.id ? '#FFF5F5' : 'var(--bg-white)', transform: choosing === left.id ? 'scale(1.04)' : 'scale(1)', transition: 'all .2s', textAlign: 'center', width: '100%' }}>
-            <div style={{ fontSize: '2.8rem', marginBottom: 8 }}>{catIcon(left.category)}</div>
-            <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.3 }}>{left.name}</div>
-            <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 4 }}>{left.category}</div>
+          <button 
+            onClick={() => pick(left)} 
+            style={{ 
+              border: `3px solid ${choosing === left.id ? 'var(--color-primary)' : 'var(--border-color)'}`, 
+              borderRadius: 20, 
+              padding: 0, // 💡 내부 여백을 없애서 이미지가 꽉 차게 만듭니다.
+              overflow: 'hidden', // 💡 이미지가 카드 모서리 라운딩 밖으로 안 빠져나가게 가둡니다.
+              cursor: 'pointer', 
+              background: 'var(--bg-white)', 
+              width: '100%', 
+              transition: 'border-color 0.2s' 
+            }}
+          >
+            {/* 💡 카드의 가로폭을 100% 다 쓰도록 가로 길이를 채우고 높이를 늘렸습니다. */}
+            <MenuImage item={left} size="100%" />
+            
+            {/* 💡 글자는 이미지 아래에 여백을 조금 주고 배치합니다. */}
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', padding: '14px 8px' }}>
+              {left.name}
+            </div>
           </button>
         )}
-        <div style={{ textAlign: 'center', fontWeight: 900, fontSize: '1.3rem', color: 'var(--color-primary)', padding: '0 4px' }}>VS</div>
+        
+        <div style={{ fontWeight: 900, color: 'var(--color-primary)', padding: '0 4px' }}>VS</div>
+        
+        {/* 오른쪽 음식 버튼 */}
         {right && (
-          <button onClick={() => pick(right)}
-            style={{ border: `3px solid ${choosing === right.id ? 'var(--color-primary)' : 'var(--border-color)'}`, borderRadius: 16, padding: '20px 12px', cursor: 'pointer', background: choosing === right.id ? '#FFF5F5' : 'var(--bg-white)', transform: choosing === right.id ? 'scale(1.04)' : 'scale(1)', transition: 'all .2s', textAlign: 'center', width: '100%' }}>
-            <div style={{ fontSize: '2.8rem', marginBottom: 8 }}>{catIcon(right.category)}</div>
-            <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.3 }}>{right.name}</div>
-            <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 4 }}>{right.category}</div>
+          <button 
+            onClick={() => pick(right)} 
+            style={{ 
+              border: `3px solid ${choosing === right.id ? 'var(--color-primary)' : 'var(--border-color)'}`, 
+              borderRadius: 20, 
+              padding: 0, 
+              overflow: 'hidden', 
+              cursor: 'pointer', 
+              background: 'var(--bg-white)', 
+              width: '100%', 
+              transition: 'border-color 0.2s' 
+            }}
+          >
+            <MenuImage item={right} size="100%" />
+            
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', padding: '14px 8px' }}>
+              {right.name}
+            </div>
           </button>
         )}
       </div>
-      <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '.82rem', marginTop: 16 }}>더 먹고 싶은 메뉴를 선택하세요!</p>
     </div>
   )
 }
