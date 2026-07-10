@@ -286,14 +286,8 @@ function Roulette() {
             />
           </div>
 
-          <button onClick={spin} disabled={isSpinning}
-            style={{
-              padding: '12px 40px', borderRadius: 50,
-              background: isSpinning ? 'var(--bg-surface)' : 'var(--color-primary)',
-              color: isSpinning ? 'var(--text-muted)' : '#fff',
-              border: 'none', fontWeight: 800, fontSize: '1rem',
-              cursor: isSpinning ? 'default' : 'pointer', transition: 'all .2s',
-            }}>
+          <button className='inline-flex min-h-[44px] items-center justify-center mt-[12px] mr-[15px] gap-2 rounded-[12px] bg-[var(--bg-surface)] px-6 text-[0.94rem] font-black text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-accent)]' 
+          onClick={spin} disabled={isSpinning}>
             {isSpinning ? '🌀 돌아가는 중...' : '🎰 룰렛 돌리기!'}
           </button>
 
@@ -404,9 +398,9 @@ function TwentyQ({ menus }) {
           <div style={{ fontSize: '3rem', margin: '12px 0' }}>🕵️</div>
           <div style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: 8 }}>스무고개로 메뉴 맞추기!</div>
           <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', lineHeight: 1.7, marginBottom: 20 }}>
-            예스/노 10개 질문으로 오늘 먹을 메뉴를 알아맞혀드려요.<br />솔직하게 대답할수록 정확해져요!
+            Yes/No! 10개 질문으로 오늘 먹을 메뉴를 알아맞혀드려요.<br />솔직하게 대답할수록 정확해져요!
           </p>
-          <button className="btn btn-primary" style={{ padding: '12px 36px', borderRadius: 50 }}
+          <button className="inline-flex min-h-[44px] items-center justify-center mt-[24px] mr-[15px] gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5"
             onClick={() => setStarted(true)}>시작하기</button>
         </div>
       )}
@@ -531,10 +525,22 @@ function WorldCup({ menus }) {
 
   if (!bracket.length) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>메뉴 불러오는 중...</div>
 
-  // 🏆 챔피언 결과 창
+  // 챔피언 결과 창
   if (champion) return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '3rem', marginBottom: 8 }}>🏆</div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+        <img
+          src="/img/icon/1st-prize.png"
+          alt="우승"
+          style={{
+            width: 72,
+            height: 72,
+            objectFit: 'contain',
+            display: 'block',
+          }}
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      </div>
 
       <div style={{
         background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)',

@@ -93,6 +93,7 @@ export default function MyPageEdit() {
     document.head.appendChild(script)
   }
 
+
   // ── 버튼 토글 ─────────────────────────────────────────────────────────────
   const togglePref = (food) =>
     setForm((f) => ({
@@ -162,6 +163,7 @@ export default function MyPageEdit() {
       return
     }
 
+
     if (newPassword.length < 8) {
       setError('비밀번호는 8자리 이상이어야 합니다.')
       return
@@ -210,6 +212,7 @@ export default function MyPageEdit() {
       } else {
         login(updated)
       }
+
 
       navigate('/mypage')
     } catch (err) {
@@ -263,7 +266,6 @@ export default function MyPageEdit() {
                 alt="캐릭터2"
                 className="self-end block max-h-[140px] w-full translate-y-6 object-contain"
               />
-
             </div>
           </div>
 
@@ -288,7 +290,7 @@ export default function MyPageEdit() {
                   />
                 </div>
 
-                {/* 주소지 */}
+                {/* 주소지 (디자인이 변경된 main의 카카오 검색 방식 유지) */}
                 <div>
                   <label className="mb-2 block text-sm font-bold text-[var(--text-secondary)]">
                     주소지
@@ -365,7 +367,6 @@ export default function MyPageEdit() {
             {/* 좋아하는 음식 */}
             <div className="rounded-[22px] border border-[var(--border-color)] bg-[#fffdf9] p-5 sm:p-6">
               <label className="mb-3 flex items-center gap-2 text-[.95rem] font-bold text-[#1890ff]">
-
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-[#EBF5FF]">
                   <img
                     src="/img/icon/thumb-up.png"
@@ -374,7 +375,6 @@ export default function MyPageEdit() {
                   />
                 </span>
                 <span>좋아하는 음식</span>
-
               </label>
               <div className="mb-4 flex flex-wrap gap-2">
                 {PREF_FOODS.map((food) => (
