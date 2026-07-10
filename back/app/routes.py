@@ -2195,16 +2195,6 @@ def manner_history():
     negative_count = total_received - positive_count
 
     return jsonify({
-        'stats': {
-            'total_received': total_received,
-            'positive':       positive_count,
-            'negative':       negative_count,
-        },
-        'stats': {
-            'total_received': total_received,
-            'positive':       positive_count,
-            'negative':       negative_count,
-        },
         'manner_score': user.manner_score,
         'stats': {
             'total_received': total_received,
