@@ -28,12 +28,17 @@ const CATEGORIES = [
 ]
 const adBannerClass =
   'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px]'
+const categoryButtonBaseClass =
+  'flex cursor-pointer items-center justify-center gap-0 whitespace-nowrap rounded-full bg-[var(--bg-white)] px-3 py-2 text-[0.85rem] font-bold text-black shadow-sm transition-all duration-150 hover:scale-105 hover:bg-[var(--color-secondary)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]'
+const categoryButtonActiveClass =
+  'scale-105 bg-[var(--color-secondary)] shadow-[0_4px_12px_rgba(0,0,0,0.12)]'
 
 export default function Menu() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const activeCat = searchParams.get('cat') ?? '전체'
+  const selectedCat = searchParams.get('cat')
+  const activeCat = selectedCat ?? '전체'
   const page = Number(searchParams.get('page') ?? 1)
   const q = searchParams.get('q') ?? ''
   const sort = searchParams.get('sort') ?? 'rating'
@@ -120,31 +125,27 @@ export default function Menu() {
 
   return (
     <>
-      <h1 className="mb-6 text-[2.2rem] font-black">맛집찾기</h1>
+      <h1 className="mb-6 text-[1.55rem] font-black">맛집찾기</h1>
 
       <section className={adBannerClass}>
         <RandomBanner />
       </section>
 
       {/* 카테고리 필터 */}
-      <div className="mt-8 mb-13 flex flex-wrap items-center gap-7">
-        <span className="shrink-0 text-[0.95rem] font-bold">카테고리</span>
-        <div className="flex flex-wrap gap-2">
+      <div className="mt-8 mb-13 flex flex-wrap items-center gap-5">
+        <span className="shrink-0 text-[0.85rem] font-bold">카테고리</span>
+        <div className="flex flex-wrap gap-3">
           {CATEGORIES.map((c) => (
             <button
               key={c}
-              className="cursor-pointer whitespace-nowrap rounded-full px-3 py-2 text-[0.85rem] font-bold text-black shadow-sm flex items-center justify-center gap-0 transition-all duration-150 hover:shadow-md"
-              style={activeCat === c
-                ? { background: '#FFEE7F', transform: 'scale(1.05)', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }
-                : { background: 'var(--bg-white)' }
-              }
+              className={`${categoryButtonBaseClass} ${selectedCat === c ? categoryButtonActiveClass : ''}`}
               onClick={() => go({ cat: c, page: 1, q: "" })}
             >
               {CAT_ICON[c] && (
                 <img
                   src={CAT_ICON[c]}
                   alt={c}
-                  className="h-6 w-8 object-contain mr-0.5"
+                  className="h-6 w-7 pl-0 object-contain "
                   onError={(e) => { e.target.style.display = 'none' }}
                 />
               )}
@@ -173,7 +174,7 @@ export default function Menu() {
               className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
               aria-label="검색"
             >
-              <span className="relative -top-[2px] leading-none">⌕</span>
+              <span className="relative -top-[4px] leading-none">⌕</span>
             </button>
           </form>
         </div>
