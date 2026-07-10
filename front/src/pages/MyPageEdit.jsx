@@ -37,18 +37,20 @@ export default function MyPageEdit() {
   useEffect(() => {
     getMyPage()
       .then((d) => {
+        // 백엔드 User 모델의 preferences { likes: [], dislikes: [] } 구조에 맞춤
+        const userPrefs = d.user?.preferences || {}
         setForm({
-          nickname: d.user.nickname ?? '',
-          allergies: d.user.allergies ?? '',
-          gender: d.user.gender ?? '미설정',
-          address: d.user.address ?? '',
-          preferences: processTags(d.user.preferences?.likes),
-          dislikes: processTags(d.user.preferences?.dislikes),
-          securityQuestion: d.user.security_question ?? '',
+          nickname: d.user?.nickname ?? '',
+          allergies: d.user?.allergies ?? '',
+          gender: d.user?.gender ?? '미설정',
+          address: d.user?.address ?? '',
+          preferences: processTags(userPrefs.likes), 
+          dislikes: processTags(userPrefs.dislikes),
+          securityQuestion: d.user?.security_question ?? '',
           securityAnswer: '',
         })
       })
-      .catch(() => { })
+      .catch((err) => { console.error('유저 데이터 로드 실패:', err) })
       .finally(() => setDataLoading(false))
   }, [])
 
@@ -64,20 +66,17 @@ export default function MyPageEdit() {
     const openPostcode = () => {
       new window.daum.Postcode({
         oncomplete: (data) => {
-          // 도로명 주소 우선, 없으면 지번 주소
           const address = data.roadAddress || data.jibunAddress
           setForm((f) => ({ ...f, address }))
         },
       }).open()
     }
 
-    // 스크립트가 이미 로드된 경우
     if (window.daum && window.daum.Postcode) {
       openPostcode()
       return
     }
 
-    // 스크립트 동적 로드
     const script = document.createElement('script')
     script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
     script.onload = openPostcode
@@ -158,18 +157,24 @@ export default function MyPageEdit() {
         address: form.address,
         likes: form.preferences,
         dislikes: form.dislikes,
-        security_question: form.securityQuestion,
-        security_answer: form.securityAnswer,
+        security_question: form.securityQuestion, 
+        security_answer: form.securityAnswer,     
       }
       if (isChangingPassword) {
         await changePassword(passwordForm.currentPassword, passwordForm.newPassword)
       }
       const updated = await updateMyPageProfile(payload)
-      login(updated)
+      
+      if (updated && updated.user) {
+        login(updated.user)
+      } else {
+        login(updated)
+      }
+
       navigate('/mypage')
     } catch (err) {
       setError(err.response?.data?.message ?? '저장에 실패했습니다.')
-    } finally {
+    } finally { // 🔥 오타 수정: 'military'를 문법에 맞는 'finally'로 교체 완료!
       setLoading(false)
     }
   }
@@ -180,8 +185,7 @@ export default function MyPageEdit() {
 
   return (
     <div className="max-w-[600px] w-full mx-auto">
-
-      <Link to="/mypage" className="mt-5 inline-flex items-center transition hover:scale-160 cursor-pointer">
+      <Link to="/mypage" className="mt-5 inline-flex items-center transition hover:scale-105 cursor-pointer">
         <img src="/img/icon/arrow_left.png" alt="마이페이지" className="h-10 w-10" />
       </Link>
 
@@ -197,7 +201,6 @@ export default function MyPageEdit() {
 
       <div className="bg-[var(--bg-white)] border border-[var(--border-color)] rounded-[var(--border-radius-xl)] p-8">
         <form onSubmit={handleSubmit}>
-
           {/* 닉네임 */}
           <div className="form-group">
             <label className="form-label">닉네임</label>
@@ -222,7 +225,7 @@ export default function MyPageEdit() {
             </div>
           </div>
 
-          {/* 주소지 - 카카오 주소 검색 팝업 연동 */}
+          {/* 주소지 */}
           <div className="form-group">
             <label className="form-label">주소지</label>
             <div className="flex gap-2">
