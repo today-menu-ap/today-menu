@@ -52,7 +52,8 @@ class Restaurant(db.Model):
     business_hours = db.Column(db.String(200), nullable=True)  # 예: 09:00~22:00 / 연중무휴
     parties  = db.relationship('Party',              backref='restaurant', lazy=True)
     rec_logs = db.relationship('RecommendationLog',  backref='restaurant', lazy=True)
-    image_url = db.Column(db.String(500), nullable=True)
+    image_url   = db.Column(db.String(500), nullable=True)
+    image_index = db.Column(db.Integer, default=1)
 
 
 class Party(db.Model):
