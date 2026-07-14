@@ -1494,10 +1494,12 @@ def _build_user_context(user_id):
     wishlist = ', '.join(liked_rests) or '없음'
 
 
-    saved_locs = ', '.join([loc.get('name', '') for loc in (user.saved_locations or [])]) or '없음'
+    from app.models import SavedLocation as _SavedLoc
+    _user_saved_locs = _SavedLoc.query.filter_by(user_id=user_id).all()
+    saved_locs = ', '.join([loc.name for loc in _user_saved_locs]) or '없음'
     saved_locs_detail = '; '.join([
-        f"{loc.get('name','')}({loc.get('address','')})"
-        for loc in (user.saved_locations or [])
+        f"{loc.name}({loc.address})"
+        for loc in _user_saved_locs
     ]) or '없음'
     address = user.address or '없음'
 
