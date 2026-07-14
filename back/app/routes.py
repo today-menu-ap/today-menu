@@ -886,7 +886,29 @@ def get_restaurant(rest_id):
         .filter(RecommendationLog.recommended_restaurant_id == rest_id, 
                 RecommendationLog.is_liked == True)\
         .scalar() or 0
-    return jsonify(serialize_restaurant(rest, like_count=raw_count))
+
+    viewer_id = None
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        try:
+            from flask_jwt_extended import decode_token
+            token_data = decode_token(auth_header.split(' ')[1])
+            viewer_id  = int(token_data['sub'])
+        except Exception:
+            pass
+
+    is_liked = False
+    log_id = None
+    if viewer_id:
+        log = RecommendationLog.query.filter_by(
+            user_id=viewer_id,
+            recommended_restaurant_id=rest_id
+        ).first()
+        if log:
+            is_liked = getattr(log, 'is_liked', True)
+            log_id = log.log_id
+
+    return jsonify(serialize_restaurant(rest, like_count=raw_count, is_liked=is_liked, log_id=log_id))
 
 
 @menu_bp.route('/', methods=['POST'])
