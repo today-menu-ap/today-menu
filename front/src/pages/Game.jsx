@@ -1248,7 +1248,7 @@ function Ladder({ menus, allMenus = [] }) {
 
       {/* 메뉴 입력 영역 */}
       <div>
-        <div style={{ fontSize: '.89rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+        <div style={{ fontSize: '.89rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 15 }}>
           메뉴 목록 ({items.length}/{MAX}) — 최소 2개 이상 필요
         </div>
 
