@@ -1309,9 +1309,14 @@ def cancel_party(party_id):
 def mypage():
     user_id    = int(get_jwt_identity())
     user       = User.query.get_or_404(user_id)
+    # 알림(10분/5분 전) 기능이 이 목록을 그대로 사용하므로, 단순 '최근 생성순'이 아니라
+    # '아직 안 끝난 파티 + 곧 시작할 순서'를 우선해서 5개를 골라야 알림이 누락되지 않는다.
     my_parties = Party.query.join(PartyMember)\
                             .filter(PartyMember.user_id == user_id)\
-                            .order_by(Party.created_at.desc()).limit(5).all()
+                            .order_by(
+                                (Party.status == StatusEnum.COMPLETED).asc(),
+                                Party.meeting_time.asc(),
+                            ).limit(5).all()
     rec_logs   = RecommendationLog.query.filter_by(user_id=user_id)\
                                         .order_by(RecommendationLog.log_id.desc()).limit(10).all()
     liked_logs = RecommendationLog.query.filter_by(user_id=user_id, is_liked=True).all()
