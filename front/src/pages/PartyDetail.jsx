@@ -699,7 +699,7 @@ export default function PartyDetail() {
               </div>
 
               {/* 호스트 전용: 파티 종료 */}
-              {party.is_host && party.status === 'CLOSED' && (
+              {isHost && party.status === 'CLOSED' && (
                 <button
                   onClick={handleFinishParty}
                   disabled={!canCloseOrFinishParty}
@@ -710,7 +710,7 @@ export default function PartyDetail() {
               )}
 
               {/* 호스트 전용: 파티 취소 */}
-              {party.is_host && party.status !== 'COMPLETED' && (
+              {isHost && party.status !== 'COMPLETED' && (
                 <button
                   onClick={handleCancelParty}
                   className="w-full rounded-[8px] bg-[var(--color-primary)] mb-3 px-4 py-3 font-black text-white transition hover:bg-[var(--color-primary-dark)]"
@@ -719,7 +719,7 @@ export default function PartyDetail() {
                 </button>
               )}
 
-              {party.is_host && (
+              {isHost && (
                 <button
                   onClick={handleToggleStatus}
                   disabled={isCompleted || (party.status === 'RECRUITING' && !canCloseOrFinishParty) || (party.status === 'CLOSED' && !canReopenParty)}
@@ -804,7 +804,7 @@ export default function PartyDetail() {
 
                   <div className="flex flex-wrap items-center justify-end gap-1">
                     {/* 호스트가 타인 강퇴 */}
-                    {user && party.is_host && !m.is_host && (
+                    {user && isHost && !m.is_host && (
                       <button
                         onClick={() => {
                           if (isCompleted) return;
@@ -829,7 +829,7 @@ export default function PartyDetail() {
 
 
                     {/* 일반 참여자 본인 탈퇴 버튼 */}
-                    {user && !party.is_host && m.user?.user_id === user.user_id && (
+                    {user && !isHost && m.user?.user_id === user.user_id && (
                       <button
                         onClick={handleLeaveParty}
                         disabled={isCompleted}
@@ -841,7 +841,7 @@ export default function PartyDetail() {
                     )}
 
                     {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
-                    {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
+                    {user && isHost && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
                       <button
                         onClick={() => {
                           // 파티원(본인 포함)이 1명 초과일 때(즉, 다른 사람이 있을 때) 경고
