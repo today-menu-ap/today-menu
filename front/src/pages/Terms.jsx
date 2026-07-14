@@ -24,7 +24,7 @@ export default function Terms() {
   }, [tab])
 
   const data     = tab === "terms" ? termsContent : privacyContent
-  const subTitle = tab === "terms" ? "today-menu 서비스 이용약관" : "개인정보 처리방침"
+  const subTitle = tab === "terms" ? "today-menu 서비스 이용약관" : "today-menu 개인정보 처리방침"
 
   return (
     <div className="flex justify-center flex-wrap w-full min-h-screen bg-white font-sans antialiased text-gray-900 pb-40">
