@@ -1042,6 +1042,20 @@ def get_party(party_id):
     return jsonify(data)
 
 
+@party_bp.route('/<int:party_id>', methods=['DELETE'])
+@jwt_login_required
+def delete_party(party_id):
+    user_id = int(get_jwt_identity())
+    party = Party.query.get_or_404(party_id)
+    if party.host_id != user_id:
+        return jsonify({'message': '호스트만 파티를 삭제할 수 있습니다.'}), 403
+    if len(party.members) > 1:
+        return jsonify({'message': '참여 중인 파티원이 있어 삭제할 수 없습니다.'}), 400
+    db.session.delete(party)
+    db.session.commit()
+    return jsonify({'message': '파티가 삭제되었습니다.'}), 200
+
+
 @party_bp.route('/', methods=['POST'])
 @jwt_login_required
 def create_party():
@@ -2648,6 +2662,6 @@ def get_my_favorites():
                 'category':   f.restaurant.category,
                 'avg_rating': f.restaurant.avg_rating,
                 'address':    f.restaurant.address or '',
-                'image':      getattr(f.restaurant, 'image', None),
+                'image':      getattr(f.restaurant, 'image_url', None),
             })
     return jsonify(result), 200
