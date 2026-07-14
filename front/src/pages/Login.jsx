@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login, kakaoLogin, naverLogin as naverLoginAPI } from '../api/services'
 import { useAuth } from '../App'
@@ -10,6 +10,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState('')  // 'kakao' | 'naver' | ''
+  const kakaoLoginStartedAt = useRef(0)
 
   // ── 네이버 SDK 초기화 ─────────────────────────────────────────────────────
   // SDK가 #naverIdLogin div에 버튼을 렌더링하지만 우리는 커스텀 버튼 사용
@@ -55,6 +56,33 @@ export default function Login() {
     }
   }, [])
 
+  useEffect(() => {
+    if (socialLoading !== 'kakao') return
+
+    const resetKakaoLoading = () => {
+      if (Date.now() - kakaoLoginStartedAt.current < 1000) return
+      setSocialLoading('')
+      setError('카카오 로그인이 취소되었습니다.')
+    }
+
+    const handleFocus = () => {
+      setTimeout(resetKakaoLoading, 300)
+    }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') handleFocus()
+    }
+    const timeout = setTimeout(resetKakaoLoading, 60000)
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      clearTimeout(timeout)
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [socialLoading])
+
   // ── 일반 로그인 ───────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -77,6 +105,7 @@ export default function Login() {
     if (!window.Kakao.isInitialized()) window.Kakao.init(kakaoKey)
 
     setSocialLoading('kakao')
+    kakaoLoginStartedAt.current = Date.now()
     window.Kakao.Auth.login({
       success: async (authObj) => {
         try {

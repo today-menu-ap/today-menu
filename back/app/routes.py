@@ -1035,11 +1035,15 @@ def create_party():
     if not title or not rest_id or not mt_str:
         return jsonify({'message': '필수 항목을 입력해주세요.'}), 400
 
+    meeting_time = datetime.fromisoformat(mt_str)
+    if meeting_time < datetime.now():
+        return jsonify({'message': '현재 시간 이후로 약속 일시를 선택해주세요.'}), 400
+
     party = Party(
         title=title,
         restaurant_id=rest_id,
         host_id=host_id,
-        meeting_time=datetime.fromisoformat(mt_str),
+        meeting_time=meeting_time,
         max_people=max_ppl,
     )
     db.session.add(party)
@@ -1295,6 +1299,7 @@ def mypage():
     user       = User.query.get_or_404(user_id)
     my_parties = Party.query.join(PartyMember)\
                             .filter(PartyMember.user_id == user_id)\
+                            .filter(Party.status != StatusEnum.CANCELLED)\
                             .order_by(Party.created_at.desc()).limit(5).all()
     rec_logs   = RecommendationLog.query.filter_by(user_id=user_id)\
                                         .order_by(RecommendationLog.log_id.desc()).limit(10).all()
