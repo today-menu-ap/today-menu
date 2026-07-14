@@ -46,7 +46,7 @@ const CategoryIcon = ({ category, size = '3rem', style }) => {
 }
 
 // 카테고리 선택 목록
-const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페', '술']
+const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페', '술집']
 
 
 // ── 💡 [공통 추가] 모든 확장자(.jpg, .png, .webp) 대응 만능 이미지 컴포넌트 ──
