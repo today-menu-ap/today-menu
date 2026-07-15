@@ -39,6 +39,10 @@ export default function PartyCreate() {
       alert('약속 일시를 선택해주세요.')
       return
     }
+    if (new Date(form.meeting_time) <= new Date()) {
+      alert('약속 일시는 현재 시간 이후로 설정해주세요.')
+      return
+    }
     setLoading(true)
     try {
       const data = await createParty({
@@ -69,6 +73,16 @@ export default function PartyCreate() {
   const setMeetingDate = (date) => {
     const time = meetingTime || '12:00'
     setForm({ ...form, meeting_time: date ? `${date}T${time}` : '' })
+  }
+
+  // 날짜 input은 기본적으로 달력 아이콘을 눌러야만 피커가 열리는데,
+  // 창 어디를 눌러도 열리도록 showPicker()를 강제로 호출한다.
+  const openDatePicker = (e) => {
+    try {
+      e.currentTarget.showPicker?.()
+    } catch (err) {
+      // showPicker 미지원 브라우저는 기본 동작(포커스)으로 자연스럽게 폴백
+    }
   }
 
   const setMeetingTimePart = (nextHour = meetingHour || '12', nextMinute = meetingMinute || '00') => {
@@ -196,6 +210,7 @@ export default function PartyCreate() {
                     value={meetingDate}
                     min={todayISO}
                     onChange={(e) => setMeetingDate(e.target.value)}
+                    onClick={openDatePicker}
                   />
                   <select
                     className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-2 text-center text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
@@ -232,6 +247,7 @@ export default function PartyCreate() {
                     value={meetingDate}
                     min={todayISO}
                     onChange={(e) => setMeetingDate(e.target.value)}
+                    onClick={openDatePicker}
                   />
                   <select
                     className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-2 text-center text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
@@ -255,6 +271,11 @@ export default function PartyCreate() {
                   </select>
                 </div>
               </div>
+              {form.meeting_time && new Date(form.meeting_time) <= new Date() && (
+                <p className="mt-2 text-sm font-semibold text-[var(--color-danger)]">
+                  약속 일시는 현재 시간 이후로 선택해주세요.
+                </p>
+              )}
             </div>
 
             <div className="mb-10">
