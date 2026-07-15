@@ -7,6 +7,7 @@
 [![UptimeRobot](https://img.shields.io/badge/Uptime-UptimeRobot-brightgreen)](https://uptimerobot.com)
 [![PWA](https://img.shields.io/badge/PWA-Capacitor-119EFF?logo=capacitor)](https://capacitorjs.com)
 [![Docker](https://img.shields.io/badge/Backend-Docker_Compose-2496ED?logo=docker)](https://www.docker.com/)
+[![Oracle Cloud](https://img.shields.io/badge/Server-Oracle_Cloud-F80000?logo=oracle)](https://www.oracle.com/cloud/)
 
 ---
 
@@ -230,6 +231,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_15-Docker_Container-4169E1?logo=postgresql)
 ![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?logo=vercel)
 ![Docker](https://img.shields.io/badge/Docker_Compose-Backend%2BDB-2496ED?logo=docker)
+![Oracle Cloud](https://img.shields.io/badge/Oracle_Cloud-VM.Standard.E2.1.Micro-F80000?logo=oracle)
 
 ### AI & API
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai)
@@ -408,12 +410,15 @@ npx cap open android   # Android Studio에서 Run 또는 Build → Generate APKs
 
 | 구분 | 서비스 | 비고 |
 |---|---|---|
-| Frontend | Vercel | GitHub 자동 배포, 무제한 동시접속 |
-| Backend | Render | Python 3.11 |Docker Compose (Flask) |
+| Frontend | Vercel | GitHub 자동 배포, `VITE_API_URL=https://140-238-54-226.nip.io` |
+| Backend | Render | Python 3.11 |Docker Compose (Flask) | Oracle Cloud VM.Standard.E2.1.Micro (140.238.54.226) 위에서 실행 |
+| HTTPS | Caddy (리버스 프록시) | `140-238-54-226.nip.io` 도메인으로 Let's Encrypt 인증서 자동 발급, 443 → 내부 5000 프록시 |
 | Database | Supabase PostgreSQL |  Backend와 내부 네트워크로 연결, 외부 미노출 |PostgreSQL 15 (Docker 컨테이너) |
 | Mobile | Capacitor Android | APK 직접 설치 / 추후 스토어 배포 예정 |
 | Uptime | UptimeRobot | 5분마다 ping (슬립 방지) |
 | 스케줄러 | APScheduler | 1분마다 만료 파티 자동 종료 |
+
+> **참고**: Vercel(HTTPS)에서 Oracle 서버(HTTP)로 직접 요청 시 Mixed Content로 브라우저가 차단하기 때문에, IP 주소에 도메인 없이 무료로 HTTPS를 붙이는 방법으로 Caddy + nip.io(`140-238-54-226.nip.io`가 자동으로 `140.238.54.226`을 가리킴)를 사용했습니다. 오라클 이미지 기본 `iptables`에 REJECT 규칙이 ufw보다 먼저 걸려있어 80/443 인증서 발급이 막히는 경우가 있으니, `iptables -L INPUT --line-numbers`로 REJECT 규칙 앞에 ACCEPT 규칙을 끼워 넣어야 합니다.
 
 ---
 
