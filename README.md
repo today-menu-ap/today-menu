@@ -21,6 +21,12 @@
 - **서비스 URL**: https://today-menu-git-main-sdhuen01-3018s-projects.vercel.app
 - **GitHub**: https://github.com/today-menu-ap/today-menu
 
+## 앱 다운로드 (APK)
+
+[안드로이드 앱 다운로드](https://drive.google.com/file/d/1xPIW8D1hX-F16lWGzJXEHSGDv9KB1p20/view?usp=drive_link)
+
+> Play 스토어 미출시 앱이라 설치 시 "출처를 알 수 없는 앱" 경고가 뜰 수 있습니다. 설정에서 허용 후 설치해주세요.
+
 ---
 
 ## 주요 기능
@@ -205,12 +211,6 @@
 | ![고객센터(모바일)](./docs/screenshots/support_m.png) | ![관리자(모바일)](./docs/screenshots/admin_m.png) |
 
 ---
-
-## 앱 다운로드 (APK)
-
-[안드로이드 앱 다운로드](https://drive.google.com/file/d/1xPIW8D1hX-F16lWGzJXEHSGDv9KB1p20/view?usp=drive_link)
-
-> Play 스토어 미출시 앱이라 설치 시 "출처를 알 수 없는 앱" 경고가 뜰 수 있습니다. 설정에서 허용 후 설치해주세요.
 
 ## 기술 스택
 
