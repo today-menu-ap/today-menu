@@ -8,6 +8,8 @@
 [![PWA](https://img.shields.io/badge/PWA-Capacitor-119EFF?logo=capacitor)](https://capacitorjs.com)
 [![Docker](https://img.shields.io/badge/Backend-Docker_Compose-2496ED?logo=docker)](https://www.docker.com/)
 [![Oracle Cloud](https://img.shields.io/badge/Server-Oracle_Cloud-F80000?logo=oracle)](https://www.oracle.com/cloud/)
+[![PostgreSQL](https://img.shields.io/badge/DB-PostgreSQL_15-4169E1?logo=postgresql)](https://www.postgresql.org/)
+[![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?logo=vercel)](https://today-menu-git-main-sdhuen01-3018s-projects.vercel.app)
 
 ---
 
@@ -232,7 +234,6 @@
 ### Database & Infra
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)
 ![Render](https://img.shields.io/badge/Render-Backend-46E3B7?logo=render)
-![Cloudflare](https://img.shields.io/badge/Cloudflare_Pages-Frontend-F38020?logo=cloudflare)
 ![UptimeRobot](https://img.shields.io/badge/UptimeRobot-Monitoring-brightgreen)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_15-Docker_Container-4169E1?logo=postgresql)
 ![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?logo=vercel)
@@ -346,31 +347,31 @@ git clone https://github.com/today-menu-ap/today-menu.git
 cd today-menu
 ```
 
-### 2. 환경변수 설정
+### 2. 환경변수 설정 (선택사항)
 
-**`back/.env`**
+> **`.env` 파일 없이도 바로 실행됩니다.** `docker-compose.yml`과 `front/vite.config.js`에 기본값이 내장되어 있어서, 3자가 소스만 clone해서 바로 확인할 수 있도록 만들었습니다. 아래는 실제 키(OpenAI, 카카오, 네이버)를 써서 전체 기능을 다 확인하고 싶을 때만 설정하면 됩니다.
+
+**`.env`** (프로젝트 루트, 백엔드용 — 없으면 `docker-compose.yml`의 기본값 사용)
 ```env
-SECRET_KEY=your-secret-key
-JWT_SECRET_KEY=your-jwt-key
-DATABASE_URL=postgresql+psycopg://...
-OPENAI_API_KEY=sk-...
-KAKAO_REST_API_KEY=...
+DB_PASSWORD=원하는비밀번호
+SECRET_KEY=원하는값
+JWT_SECRET_KEY=원하는값
+OPENAI_API_KEY=sk-...       # 없으면 챗봇 기능만 비활성화
+KAKAO_REST_API_KEY=...      # 없으면 카카오맵/로그인만 비활성화
 NAVER_CLIENT_ID=...
-NAVER_CLIENT_SECRET=...
+NAVER_CLIENT_SECRET=...     # 없으면 네이버 로그인만 비활성화
 ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-**`front/.env`**
+**`front/.env`** (선택사항 — 없으면 `vite.config.js`의 기본값 `http://localhost:5000` 사용)
 ```env
 VITE_API_URL=
 VITE_NAVER_CLIENT_ID=...
 ```
-> 로컬 웹 개발 시 빈 값으로 두면 Vite proxy가 자동으로 `:5000`으로 연결합니다.  
 > 안드로이드 앱(에뮬레이터/실기기)에서 테스트할 경우 PC의 로컬 IP(예: `http://192.168.x.x:5000`)를 직접 지정해야 합니다.
 
-### 3-A. Docker로 실행 (권장)
+### 3-A. Docker로 실행 (권장, `.env` 없이도 바로 됩니다)
 ```bash
-echo "DB_PASSWORD=원하는비밀번호" > .env
 docker compose up -d --build
 docker compose exec backend python seed.py
 ```
@@ -453,5 +454,3 @@ npx cap open android   # Android Studio에서 Run 또는 Build → Generate APKs
 ## 라이선스
 
 MIT License © 2026 오늘뭐먹지팀
-
-
