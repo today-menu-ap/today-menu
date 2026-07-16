@@ -2,11 +2,12 @@
 
 > AI 기반 메뉴 추천 플랫폼 — 혼밥부터 파티까지, 오늘 뭐먹을지 고민 끝!
 
-[![Cloudflare](https://img.shields.io/badge/Frontend-Cloudflare_Pages-F38020?logo=cloudflare)](https://today-menu-git-main-sdhuen01-3018s-projects.vercel.app)
 [![Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render)](https://today-menu-backend.onrender.com)
 [![Supabase](https://img.shields.io/badge/DB-Supabase_PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com)
 [![UptimeRobot](https://img.shields.io/badge/Uptime-UptimeRobot-brightgreen)](https://uptimerobot.com)
 [![PWA](https://img.shields.io/badge/PWA-Capacitor-119EFF?logo=capacitor)](https://capacitorjs.com)
+[![Docker](https://img.shields.io/badge/Backend-Docker_Compose-2496ED?logo=docker)](https://www.docker.com/)
+[![Oracle Cloud](https://img.shields.io/badge/Server-Oracle_Cloud-F80000?logo=oracle)](https://www.oracle.com/cloud/)
 
 ---
 
@@ -69,6 +70,7 @@
 - 모집 인원 미달 시 마감 → 탈퇴 발생 시 **자동 재모집** 전환
 - **파티 알림**: 소켓 기반 참여·퇴장 알림 + 시작 10분/5분 전 알림
 - 파티 상세에서 파티원 **매너온도 투표** 가능
+- 목록은 **5개씩 페이지네이션**
 
 ---
 
@@ -146,52 +148,67 @@
 ## 화면 구성
 
 ### 홈 화면
-![홈 화면](./docs/screenshots/home.jpeg)
+| 홈 화면 | 홈(모바일) |
+|---|---|
+| ![홈 화면](./docs/screenshots/Home.png) | ![홈(모바일)](./docs/screenshots/mobile_Home.png) |
 
 ### 로그인 / 회원가입
 | 로그인 | 회원가입 |
 |---|---|
 | ![로그인](./docs/screenshots/login.jpeg) | ![회원가입](./docs/screenshots/register.jpeg) |
+| ![로그인(모바일)](./docs/screenshots/login_m.png) | ![회원가입(모바일)](./docs/screenshots/register.png) |
 
 ### 메뉴 목록 / 상세
 | 메뉴 목록 | 메뉴 상세 + 리뷰 |
 |---|---|
-| ![메뉴 목록](./docs/screenshots/menu.jpeg) | ![메뉴 상세](./docs/screenshots/menu_detail.jpeg) |
+| ![메뉴 목록](./docs/screenshots/Menu.png) | ![메뉴 상세](./docs/screenshots/MenuDetail.png) |
+| ![메뉴 목록(모바일)](./docs/screenshots/mobile_menu.png) | ![메뉴 목록(모바일)](./docs/screenshots/mobile_menuDetail.png) |
 
 ### 파티
 | 파티 목록 | 파티 상세 + 채팅 |
 |---|---|
-| ![파티 목록](./docs/screenshots/party.jpeg) | ![파티 상세](./docs/screenshots/party_detail.jpeg) |
+| ![파티 목록](./docs/screenshots/party.png) | ![파티 상세](./docs/screenshots/party_detail.png) |
+| ![파티 목록(모바일)](./docs/screenshots/party_m.png) | ![파티 상세](./docs/screenshots/party_detail_m.png) |
 
 ### AI 챗봇
 | 메뉴 추천 | Q & A |
 |---|---|
-| ![챗봇 추천](./docs/screenshots/chatbot1.png) | ![챗봇 QnA](./docs/screenshots/chatbot2.png) |
+| ![챗봇 추천](./docs/screenshots/chatbot_rec(2).png) | ![챗봇 QnA 1](./docs/screenshots/chatbot_qna1.png)<br><br>![챗봇 QnA 2](./docs/screenshots/chatbot_qna2.png) | ![챗봇 추천(모바일)](./docs/screenshots/mobile_menu.png) |
 
 ### 마이페이지
 | 마이페이지 | 프로필 수정 |
 |---|---|
-| ![마이페이지](./docs/screenshots/mypage.jpeg) | ![프로필수정](./docs/screenshots/mypageedit.jpeg) |
+| ![마이페이지](./docs/screenshots/mypage.png) | ![프로필수정](./docs/screenshots/mypageedit.png) |
+| ![마이페이지(모바일)](./docs/screenshots/mypage_m.png) | ![프로필수정(모바일)](./docs/screenshots/mypageedit_m.png) |
 
 ### 게임
 | 룰렛 | 월드컵 |
 |---|---|
-| ![룰렛](./docs/screenshots/game_roulette.jpeg) | ![월드컵](./docs/screenshots/game_worldcup.jpeg) |
+| ![룰렛](./docs/screenshots/game_roulette(1).png) | ![월드컵](./docs/screenshots/game_worldcup1.png) |
+| ![룰렛(모바일)](./docs/screenshots/mobile_rullet.png) | ![월드컵(모바일)](./docs/screenshots/mobile_worldcup.png) |
 
 | 스무고개 | 뽑기 |
 |---|---|
-| ![스무고개](./docs/screenshots/game_twentyq.jpeg) | ![뽑기](./docs/screenshots/game_scratch.jpeg) |
+| ![스무고개](./docs/screenshots/game_20tree.png) | ![뽑기](./docs/screenshots/game_ticket.png) |
+| ![스무고개(모바일)](./docs/screenshots/mobile_20tree.png) | ![뽑기(모바일)](./docs/screenshots/mobile_game_ticket.png) |
 
-| 사다리 |
-|---|
-| ![사다리](./docs/screenshots/game_sd.jpeg) |
+| 사다리 | 사다리(모바일) |
+|---|---|
+| ![사다리](./docs/screenshots/gmae_ladder.png) | ![사다리(모바일)](./docs/screenshots/mobile_ladder.png) |
 
 ### 고객센터 / 관리자
 | 고객센터 | 관리자 |
 |---|---|
 | ![고객센터](./docs/screenshots/support.jpeg) | ![관리자](./docs/screenshots/admin.jpeg) |
+| ![고객센터(모바일)](./docs/screenshots/support_m.png) | ![관리자(모바일)](./docs/screenshots/admin_m.png) |
 
 ---
+
+## 앱 다운로드 (APK)
+
+[안드로이드 앱 다운로드](https://drive.google.com/file/d/1xPIW8D1hX-F16lWGzJXEHSGDv9KB1p20/view?usp=drive_link)
+
+> Play 스토어 미출시 앱이라 설치 시 "출처를 알 수 없는 앱" 경고가 뜰 수 있습니다. 설정에서 허용 후 설치해주세요.
 
 ## 기술 스택
 
@@ -201,6 +218,7 @@
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38B2AC?logo=tailwindcss)
 ![SocketIO](https://img.shields.io/badge/Socket.IO-Client-010101?logo=socketdotio)
 ![Axios](https://img.shields.io/badge/Axios-HTTP-5A29E4?logo=axios)
+![Swiper](https://img.shields.io/badge/Swiper-Carousel-6332F6?logo=swiper)
 ![Capacitor](https://img.shields.io/badge/Capacitor-PWA%2FAndroid-119EFF?logo=capacitor)
 
 ### Backend
@@ -216,6 +234,10 @@
 ![Render](https://img.shields.io/badge/Render-Backend-46E3B7?logo=render)
 ![Cloudflare](https://img.shields.io/badge/Cloudflare_Pages-Frontend-F38020?logo=cloudflare)
 ![UptimeRobot](https://img.shields.io/badge/UptimeRobot-Monitoring-brightgreen)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL_15-Docker_Container-4169E1?logo=postgresql)
+![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?logo=vercel)
+![Docker](https://img.shields.io/badge/Docker_Compose-Backend%2BDB-2496ED?logo=docker)
+![Oracle Cloud](https://img.shields.io/badge/Oracle_Cloud-VM.Standard.E2.1.Micro-F80000?logo=oracle)
 
 ### AI & API
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai)
@@ -228,25 +250,31 @@
 
 ```
 today-menu/
+├── docker-compose.yml         ← Flask + PostgreSQL 통합 배포 (오라클/로컬 공용)
+├── .env                       ← DB_PASSWORD (docker-compose용, 루트)
+│
 ├── front/
 │   ├── index.html                     ← Vite 진입점 + PWA 메타태그 + SW 등록
 │   ├── vite.config.js                 ← 프록시 + manualChunks 분리
-│   ├── package.json                   ← React 19 + Tailwind v4 + Axios + SocketIO + Capacitor
+│   ├── package.json                   ← React 19 + Tailwind v4 + Axios + SocketIO + Capacitor + Swiper
 │   ├── capacitor.config.json          ← Capacitor (PWA/Android WebView) 설정
-│   ├── vercel.json                    ← Vercel/Cloudflare 배포 설정
-│   ├── .env                           ← VITE_API_URL
+│   ├── vercel.json                    ← Vercel 배포 설정
+│   ├── .env                           ← VITE_API_URL, VITE_NAVER_CLIENT_ID
+│   ├── android/                       ← Capacitor 안드로이드 네이티브 프로젝트
 │   └── src/
 │       ├── App.jsx                    ← 라우터 + AuthContext + PrivateRoute + useAuth
 │       ├── api/
 │       │   ├── axiosInstance.js       ← JWT 인터셉터 (401 → refresh 자동 재발급)
-│       │   └── services.js            ← API 엔드포인트 함수 모음 (54개)
+│       │   └── services.js            ← API 엔드포인트 함수 모음
 │       ├── components/
 │       │   ├── ChatBot.jsx            ← AI 챗봇 FAB (추천/Q&A + ACTION_LINKS)
-│       │   ├── PartyNotification.jsx  ← 파티 알림 (소켓 + 10분/5분 전 알림)
+│       │   ├── PartyNotification.jsx  ← 파티 알림 (소켓 + 10분/5분 전 알림, 모바일 포함)
 │       │   ├── RestaurantSearch.jsx   ← 카카오 로컬 API 식당 검색
+│       │   ├── RestaurantImage.jsx    ← 카테고리별 대체 이미지 매핑
+│       │   ├── Cafeteria.jsx          ← 홈 트렌딩 식당 카드
 │       │   ├── RandomBanner.jsx       ← 홈 랜덤 배너 (chatbot/party/game/menu)
 │       │   ├── ReviewModal.jsx        ← 리뷰/별점 작성 모달
-│       │   ├── Header.jsx / Footer.jsx
+│       │   ├── Header.jsx / Footer.jsx / ScrollToTop.jsx
 │       │   └── ...
 │       ├── pages/
 │       │   ├── Home.jsx               ← 슬라이더 + AI챗봇 + 실시간 인기검색어 + 내주변
@@ -258,26 +286,31 @@ today-menu/
 │       │   ├── Game.jsx               ← 5종 게임 (룰렛/스무고개/월드컵/뽑기/사다리)
 │       │   ├── MannerHistory.jsx      ← 매너온도 상세 + 통계
 │       │   ├── AdminPage.jsx          ← 관리자 6탭
+│       │   ├── ChatModal.jsx          ← 파티 채팅 모달
 │       │   ├── Support.jsx / Notice.jsx
 │       │   ├── Login.jsx / Register.jsx
-│       │   ├── FindPassword.jsx / FindId.jsx
+│       │   ├── FindPassword.jsx / FindId.jsx / NaverCallback.jsx
+│       │   ├── Terms.jsx              ← 이용약관 + 개인정보처리방침 (탭)
 │       │   └── ...
 │       └── data/
 │           ├── termsContent.js        ← 이용약관 (챗봇 Q&A 컨텍스트 활용)
 │           └── privacyContent.js      ← 개인정보처리방침
 └── back/
-    ├── .env                           ← DATABASE_URL, SECRET_KEY, OPENAI_API_KEY 등
+    ├── .env                           ← DATABASE_URL, SECRET_KEY, OPENAI_API_KEY,
+    │                                     KAKAO_REST_API_KEY, NAVER_CLIENT_ID/SECRET, ALLOWED_ORIGINS
+    ├── Dockerfile                     ← python:3.12-slim 기반
     ├── run.py / main.py / config.py
-    ├── seed.py                        ← DB 초기화 + 시드 (유저 102명, 찜/리뷰 5개씩)
+    ├── seed.py                        ← DB 초기화 + 시드 (유저 101명, 식당 10,505개, 메뉴 361개)
+    ├── 수원지역_상가_최종.csv / menus.csv   ← 시드 데이터
     ├── requirements.txt
-    ├── render.yaml                    ← Render 배포 설정
-    ├── install.bat / setup.bat        ← 로컬 설치/실행 스크립트
+    ├── install.bat / start.bat / setup.bat   ← 로컬 최초설치/실행 스크립트
     └── app/
-        ├── __init__.py                ← CORS + SocketIO + JWT + APScheduler (파티 자동 종료)
+        ├── __init__.py                ← CORS(Capacitor origin 포함) + SocketIO + JWT + APScheduler
         ├── models.py                  ← DB 모델 (16개 테이블)
-        ├── routes.py                  ← REST API (87개 함수)
+        ├── routes.py                  ← REST API 전체 (main/auth/menu/party/mypage/api/support)
         ├── constants.py
         └── utils.py
+
 ```
 
 ---
@@ -327,19 +360,29 @@ NAVER_CLIENT_SECRET=...
 ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-**`front/.env.local`**
+**`front/.env`**
 ```env
 VITE_API_URL=
+VITE_NAVER_CLIENT_ID=...
 ```
-> 로컬에서는 빈 값으로 두면 Vite proxy가 자동으로 `:5000`으로 연결합니다.
+> 로컬 웹 개발 시 빈 값으로 두면 Vite proxy가 자동으로 `:5000`으로 연결합니다.  
+> 안드로이드 앱(에뮬레이터/실기기)에서 테스트할 경우 PC의 로컬 IP(예: `http://192.168.x.x:5000`)를 직접 지정해야 합니다.
 
-### 3. 자동 실행 (Windows)
+### 3-A. Docker로 실행 (권장)
+```bash
+echo "DB_PASSWORD=원하는비밀번호" > .env
+docker compose up -d --build
+docker compose exec backend python seed.py
+```
+`front/` 에서 `npm install && npm run dev`로 프론트 실행.
+
+### 3-B. 로컬 가상환경으로 실행 (Windows)
 ```bash
 install.bat   # 가상환경 + 패키지 + DB 초기화
-setup.bat     # 백엔드 + 프론트 동시 실행
+start.bat     # 백엔드 + 프론트 동시 실행
 ```
 
-### 4. 수동 실행
+### 3-C. 수동 실행
 ```bash
 # 백엔드
 cd back
@@ -353,11 +396,19 @@ npm install
 npm run dev
 ```
 
-### 5. 접속
+### 4. 접속
 | 구분 | URL |
 |---|---|
 | 프론트 | http://localhost:5173 |
 | 백엔드 | http://localhost:5000 |
+
+### 5. 안드로이드 앱 빌드
+```bash
+cd front
+npm run build
+npx cap sync android
+npx cap open android   # Android Studio에서 Run 또는 Build → Generate APKs
+```
 
 ---
 
@@ -365,11 +416,15 @@ npm run dev
 
 | 구분 | 서비스 | 비고 |
 |---|---|---|
-| Frontend | Cloudflare Pages | GitHub 자동 배포, 무제한 동시접속 |
-| Backend | Render | Python 3.11 |
-| Database | Supabase PostgreSQL | 포트 5432 Session mode |
+| Frontend | Vercel | GitHub 자동 배포, `VITE_API_URL=https://140-238-54-226.nip.io` |
+| Backend | Render | Python 3.11 |Docker Compose (Flask) | Oracle Cloud VM.Standard.E2.1.Micro (140.238.54.226) 위에서 실행 |
+| HTTPS | Caddy (리버스 프록시) | `140-238-54-226.nip.io` 도메인으로 Let's Encrypt 인증서 자동 발급, 443 → 내부 5000 프록시 |
+| Database | Supabase PostgreSQL |  Backend와 내부 네트워크로 연결, 외부 미노출 |PostgreSQL 15 (Docker 컨테이너) |
+| Mobile | Capacitor Android | APK 직접 설치 / 추후 스토어 배포 예정 |
 | Uptime | UptimeRobot | 5분마다 ping (슬립 방지) |
 | 스케줄러 | APScheduler | 1분마다 만료 파티 자동 종료 |
+
+> **참고**: Vercel(HTTPS)에서 Oracle 서버(HTTP)로 직접 요청 시 Mixed Content로 브라우저가 차단하기 때문에, IP 주소에 도메인 없이 무료로 HTTPS를 붙이는 방법으로 Caddy + nip.io(`140-238-54-226.nip.io`가 자동으로 `140.238.54.226`을 가리킴)를 사용했습니다. 오라클 이미지 기본 `iptables`에 REJECT 규칙이 ufw보다 먼저 걸려있어 80/443 인증서 발급이 막히는 경우가 있으니, `iptables -L INPUT --line-numbers`로 REJECT 규칙 앞에 ACCEPT 규칙을 끼워 넣어야 합니다.
 
 ---
 
@@ -398,3 +453,5 @@ npm run dev
 ## 라이선스
 
 MIT License © 2026 오늘뭐먹지팀
+
+
