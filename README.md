@@ -417,7 +417,7 @@ npx cap open android   # Android Studio에서 Run 또는 Build → Generate APKs
 | 구분 | 서비스 | 비고 |
 |---|---|---|
 | Frontend | Vercel | GitHub 자동 배포, `VITE_API_URL=https://140-238-54-226.nip.io` |
-| Backend | Render | Python 3.11 |Docker Compose (Flask) | Oracle Cloud VM.Standard.E2.1.Micro (140.238.54.226) 위에서 실행 |
+| Backend | Render | Python 3.12 |Docker Compose (Flask) | Oracle Cloud VM.Standard.E2.1.Micro (140.238.54.226) 위에서 실행 |
 | HTTPS | Caddy (리버스 프록시) | `140-238-54-226.nip.io` 도메인으로 Let's Encrypt 인증서 자동 발급, 443 → 내부 5000 프록시 |
 | Database | Supabase PostgreSQL |  Backend와 내부 네트워크로 연결, 외부 미노출 |PostgreSQL 15 (Docker 컨테이너) |
 | Mobile | Capacitor Android | APK 직접 설치 / 추후 스토어 배포 예정 |
